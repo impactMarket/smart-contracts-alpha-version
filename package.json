@@ -1,0 +1,42 @@
+{
+    "name": "impakt",
+    "version": "0.0.1-alpha",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "pretest": "yarn generate-ts",
+        "test": "scripts/test.sh",
+        "generate-ts": "truffle compile && typechain --target truffle --outDir types/truffle-contracts './build/contracts/*.json'"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/obernardovieira/impakt.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/obernardovieira/impakt/issues"
+    },
+    "homepage": "https://github.com/obernardovieira/impakt#readme",
+    "dependencies": {
+        "@openzeppelin/contracts": "2.5.0"
+    },
+    "devDependencies": {
+        "@celo/ganache-cli": "6.6.1",
+        "@openzeppelin/test-helpers": "^0.5.5",
+        "@types/bignumber.js": "5.0.0",
+        "@types/chai": "4.2.10",
+        "@types/mocha": "7.0.2",
+        "@types/node": "12.12.31",
+        "bignumber.js": "9.0.0",
+        "chai": "4.2.0",
+        "truffle": "5.1.18",
+        "truffle-typings": "1.0.8",
+        "ts-generator": "0.0.8",
+        "ts-node": "8.6.2",
+        "typechain": "1.0.5",
+        "typechain-target-truffle": "1.0.2",
+        "typescript": "3.8.3"
+    }
+}
