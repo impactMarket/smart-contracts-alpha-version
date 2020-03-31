@@ -1,5 +1,5 @@
-var ImpaktMarket = artifacts.require('ImpaktMarket')
+var ImpactMarket = artifacts.require('ImpactMarket')
 
 module.exports = async (deployer) => {
-    await deployer.deploy(ImpaktMarket);
+    await deployer.deploy(ImpactMarket);
 }

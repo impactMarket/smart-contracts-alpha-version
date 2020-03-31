@@ -1,33 +1,33 @@
 import { should } from 'chai';
-import { ImpaktMarketInstance } from '../types/truffle-contracts';
+import { ImpactMarketInstance } from '../types/truffle-contracts';
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 
 
-const ImpaktMarket = artifacts.require('./ImpaktMarket.sol') as Truffle.Contract<ImpaktMarketInstance>;
+const ImpactMarket = artifacts.require('./ImpactMarket.sol') as Truffle.Contract<ImpactMarketInstance>;
 should();
 
-/** @test {ImpaktMarket} contract */
-contract('ImpaktMarket', (accounts) => {
+/** @test {ImpactMarket} contract */
+contract('ImpactMarket', (accounts) => {
     const adminAccount = accounts[0];
     const communityAccount = accounts[1];
     const userAccount = accounts[2];
 
     it('Test the flow', async () => {
-        const impaktMarketInstance = await ImpaktMarket.deployed();
+        const impactMarketInstance = await ImpactMarket.deployed();
 
-        await impaktMarketInstance.addWhitelistCommunity(communityAccount, { from: adminAccount });
-        await impaktMarketInstance.addWhitelistUser(userAccount, { from: communityAccount });
+        await impactMarketInstance.addWhitelistCommunity(communityAccount, { from: adminAccount });
+        await impactMarketInstance.addWhitelistUser(userAccount, { from: communityAccount });
 
-        (await impaktMarketInstance.isWhitelistUser(userAccount)).should.be.true;
-        (await impaktMarketInstance.cooldownClaim(userAccount)).toNumber().should.be.equal(0);
-        const tx = await impaktMarketInstance.claim({ from: userAccount });
+        (await impactMarketInstance.isWhitelistUser(userAccount)).should.be.true;
+        (await impactMarketInstance.cooldownClaim(userAccount)).toNumber().should.be.equal(0);
+        const tx = await impactMarketInstance.claim({ from: userAccount });
         const blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
-        (await impaktMarketInstance.cooldownClaim(userAccount)).toNumber().should.be.equal(blockData.timestamp + 60);
+        (await impactMarketInstance.cooldownClaim(userAccount)).toNumber().should.be.equal(blockData.timestamp + 60);
         await expectRevert(
-            impaktMarketInstance.claim({ from: userAccount }),
+            impactMarketInstance.claim({ from: userAccount }),
             "Not allowed yet!"
         );
         await time.increase(time.duration.seconds(65));
-        await impaktMarketInstance.claim({ from: userAccount });
+        await impactMarketInstance.claim({ from: userAccount });
     });
 });

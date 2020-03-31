@@ -1,5 +1,5 @@
 {
-    "name": "impakt",
+    "name": "impactMarket-core",
     "version": "0.0.1-alpha",
     "description": "",
     "main": "index.js",
@@ -10,15 +10,15 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/obernardovieira/impakt.git"
+        "url": "git+https://github.com/obernardovieira/impactMarket-core.git"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/obernardovieira/impakt/issues"
+        "url": "https://github.com/obernardovieira/impactMarket-core/issues"
     },
-    "homepage": "https://github.com/obernardovieira/impakt#readme",
+    "homepage": "https://github.com/obernardovieira/impactMarket-core#readme",
     "dependencies": {
         "@openzeppelin/contracts": "2.5.0"
     },

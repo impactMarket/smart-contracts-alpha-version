@@ -3,7 +3,7 @@ pragma solidity >=0.5.0 <0.7.0;
 import "./roles/WhitelistedUser.sol";
 
 
-contract ImpaktMarket is WhitelistedUser {
+contract ImpactMarket is WhitelistedUser {
     mapping(address => uint256) public cooldownClaim;
     uint256 cooldownTime = 1 minutes;
 
