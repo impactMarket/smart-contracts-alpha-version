@@ -1,25 +1,27 @@
 {
-    "name": "impactMarket-core",
+    "name": "impactMarket",
     "version": "0.0.1-alpha",
     "description": "",
-    "main": "index.js",
+    "main": "node_modules/expo/AppEntry.js",
     "scripts": {
+        "account": "node utils/createAccount.js",
         "pretest": "yarn generate-ts",
         "test": "scripts/test.sh",
         "generate-ts": "truffle compile && typechain --target truffle --outDir types/truffle-contracts './build/contracts/*.json'"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/obernardovieira/impactMarket-core.git"
+        "url": "git+https://github.com/obernardovieira/impactMarket.git"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/obernardovieira/impactMarket-core/issues"
+        "url": "https://github.com/obernardovieira/impactMarket/issues"
     },
-    "homepage": "https://github.com/obernardovieira/impactMarket-core#readme",
+    "homepage": "https://github.com/obernardovieira/impactMarket#readme",
     "dependencies": {
+        "@celo/contractkit": "0.2.14",
         "@openzeppelin/contracts": "2.5.0"
     },
     "devDependencies": {
