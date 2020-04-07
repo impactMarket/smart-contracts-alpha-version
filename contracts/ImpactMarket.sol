@@ -15,7 +15,9 @@ contract ImpactMarket is WhitelistedCommunity {
 
     function addUser(address _account) public onlyWhitelistCommunity {
         userToCommunity[_account] = msg.sender;
-        cooldownClaim[_account] = commnitiesClaim[msg.sender].baseIntervalTime;
+        cooldownClaim[_account] = uint256(
+            block.timestamp + commnitiesClaim[msg.sender].baseIntervalTime
+        );
     }
 
     function claim() public onlyUserInAnyCommunity {

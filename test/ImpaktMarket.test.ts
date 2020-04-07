@@ -12,6 +12,7 @@ contract('ImpactMarket', async (accounts) => {
     const adminAccount = accounts[0];
     const communityA = accounts[1];
     const userA = accounts[2];
+    const userB = accounts[3];
     let impactMarketInstance: ImpactMarketInstance;
 
     describe('WhitelistedCommunity', () => {
@@ -124,6 +125,40 @@ contract('ImpactMarket', async (accounts) => {
             (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.true;
             await impactMarketInstance.renounce({ from: userA });
             (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.false;
+        });
+    });
+
+    describe('ImpactMarket', () => {
+        beforeEach(async () => {
+            impactMarketInstance = await ImpactMarket.new();
+            await impactMarketInstance.addWhitelistCommunity(
+                communityA,
+                new BigNumber('2'), // ammount by claim
+                new BigNumber('86400'), // base interval time in ms
+                new BigNumber('3600'), // increment interval time in ms
+                new BigNumber('1000'), // claim hardcap
+                { from: adminAccount },
+            );
+            await impactMarketInstance.addUser(userA, { from: communityA });
+        });
+
+        it('should not claim without belong to community', async () => {
+            await expectRevert(
+                impactMarketInstance.claim({ from: userB }),
+                "Not in a community!"
+            );
+        });
+
+        it('should not claim without waiting', async () => {
+            await expectRevert(
+                impactMarketInstance.claim({ from: userA }),
+                "Not allowed yet!"
+            );
+        });
+
+        it('should claim after waiting', async () => {
+            await time.increase(time.duration.seconds(86405));
+            await impactMarketInstance.claim({ from: userA });
         });
     });
 
