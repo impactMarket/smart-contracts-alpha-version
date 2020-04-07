@@ -15,6 +15,7 @@ contract WhitelistedCommunity is WhitelistAdminRole {
     }
 
     mapping(address => CommunityClaim) public commnitiesClaim;
+    mapping(address => address) public userToCommunity;
 
     event WhitelistCommunityAdded(address indexed _account);
     event WhitelistCommunityRemoved(address indexed _account);
@@ -54,6 +55,30 @@ contract WhitelistedCommunity is WhitelistAdminRole {
 
     function renounceWhitelistCommunity() public {
         _removeWhitelistCommunity(_msgSender());
+    }
+
+    function isUserInAnyCommunity(address _account) public view returns (bool) {
+        return userToCommunity[_account] != address(0);
+    }
+
+    function isUserInCommunity(address _account, address _community)
+        public
+        view
+        returns (bool)
+    {
+        return userToCommunity[_account] == _community;
+    }
+
+    function renounce() public {
+        userToCommunity[msg.sender] = address(0);
+    }
+
+    function removeUser(address _account) public onlyWhitelistCommunity {
+        userToCommunity[_account] = address(0);
+    }
+
+    function removeWhitelistCommunity(address _community) public onlyWhitelistAdmin {
+        delete commnitiesClaim[_community];
     }
 
     function _addWhitelistCommunity(address _account) internal {

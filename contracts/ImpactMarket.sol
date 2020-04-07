@@ -1,20 +1,31 @@
 pragma solidity >=0.5.0 <0.7.0;
 
-import "./roles/WhitelistedUser.sol";
+import "./roles/WhitelistedCommunity.sol";
 
 
-contract ImpactMarket is WhitelistedUser {
+contract ImpactMarket is WhitelistedCommunity {
     mapping(address => uint256) public cooldownClaim;
-    uint256 cooldownTime = 1 minutes;
 
-    constructor() public WhitelistedUser() {}
+    constructor() public WhitelistedCommunity() {}
 
-    function claim() public onlyWhitelistUser {
+    modifier onlyUserInAnyCommunity() {
+        require(isUserInAnyCommunity(msg.sender), "Not in a community!");
+        _;
+    }
+
+    function addUser(address _account) public onlyWhitelistCommunity {
+        userToCommunity[_account] = msg.sender;
+        cooldownClaim[_account] = commnitiesClaim[msg.sender].baseIntervalTime;
+    }
+
+    function claim() public onlyUserInAnyCommunity {
         require(_isReady(), "Not allowed yet!");
         _triggerCooldown();
     }
 
     function _triggerCooldown() internal {
+        uint256 cooldownTime = commnitiesClaim[userToCommunity[msg.sender]]
+            .incIntervalTime;
         cooldownClaim[msg.sender] = uint256(block.timestamp + cooldownTime);
     }
 
