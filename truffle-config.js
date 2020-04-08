@@ -1,18 +1,18 @@
-const Kit = require('@celo/contractkit')
-const path = require('path')
+// const Kit = require('@celo/contractkit')
+// const path = require('path')
 
-// Connect to the desired network
-const kit = Kit.newKit('https://alfajores-forno.celo-testnet.org')
+// // Connect to the desired network
+// const kit = Kit.newKit('https://alfajores-forno.celo-testnet.org')
 
-const getAccount = require('./utils/getAccount').getAccount
+// const getAccount = require('./utils/getAccount').getAccount
 
-async function awaitWrapper() {
-    let account = await getAccount()
-    console.log(`Account address: ${account.address}`)
-    kit.addAccount(account.privateKey)
-}
+// async function awaitWrapper() {
+//     let account = await getAccount()
+//     console.log(`Account address: ${account.address}`)
+//     kit.addAccount(account.privateKey)
+// }
 
-awaitWrapper()
+// awaitWrapper()
 
 require('ts-node/register');
 module.exports = {
@@ -32,10 +32,10 @@ module.exports = {
             network_id: "*",
         },
 
-        alfajores: {
-            provider: kit.web3.currentProvider,
-            network_id: 44786
-        },
+        // alfajores: {
+        //     provider: kit.web3.currentProvider,
+        //     network_id: 44786
+        // },
 
         // this is necessary for coverage
         coverage: {
