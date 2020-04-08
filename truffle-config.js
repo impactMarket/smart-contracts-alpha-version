@@ -31,9 +31,26 @@ module.exports = {
             port: 8545,
             network_id: "*",
         },
+
         alfajores: {
             provider: kit.web3.currentProvider,
             network_id: 44786
+        },
+
+        // this is necessary for coverage
+        coverage: {
+            host: 'localhost',
+            network_id: '*', // eslint-disable-line camelcase
+            port: 8555,
+            gas: 0xfffffffffff,
+            gasPrice: 0x01,
         }
-    }
+    },
+
+    // Set default mocha options here, use special reporters etc.
+    mocha: {
+        timeout: 100000,
+    },
+
+    plugins: ['solidity-coverage']
 };

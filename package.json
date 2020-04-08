@@ -7,6 +7,8 @@
         "account": "node utils/createAccount.js",
         "pretest": "yarn generate-ts",
         "test": "scripts/test.sh",
+        "coverage": "SOLIDITY_COVERAGE=true scripts/test.sh",
+        "coverage:ci": "CI=true SOLIDITY_COVERAGE=true scripts/test.sh",
         "generate-ts": "truffle compile && typechain --target truffle --outDir types/truffle-contracts './build/contracts/*.json'"
     },
     "repository": {
@@ -39,6 +41,7 @@
         "ts-node": "8.6.2",
         "typechain": "1.0.5",
         "typechain-target-truffle": "1.0.2",
-        "typescript": "3.8.3"
+        "typescript": "3.8.3",
+        "solidity-coverage": "0.7.1"
     }
 }
