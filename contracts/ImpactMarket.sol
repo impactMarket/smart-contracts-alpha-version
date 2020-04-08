@@ -1,12 +1,16 @@
-pragma solidity >=0.5.0 <0.7.0;
+pragma solidity ^0.5.16;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./WhitelistedCommunity.sol";
 
 
 contract ImpactMarket is WhitelistedCommunity {
     mapping(address => uint256) public cooldownClaim;
+    address private cUSDAddress;
 
-    constructor() public WhitelistedCommunity() {}
+    constructor(address _cUSDAddress) public WhitelistedCommunity() {
+        cUSDAddress = _cUSDAddress;
+    }
 
     modifier onlyUserInAnyCommunity() {
         require(isUserInAnyCommunity(msg.sender), "Not in a community!");
@@ -22,6 +26,7 @@ contract ImpactMarket is WhitelistedCommunity {
 
     function claim() public onlyUserInAnyCommunity {
         require(_isReady(), "Not allowed yet!");
+        // ERC20(cUSDAddress).transfer(msg.sender, 2 * 10 ** 18); // TODO: use contract factory
         _triggerCooldown();
     }
 

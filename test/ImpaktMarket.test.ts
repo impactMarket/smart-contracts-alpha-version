@@ -1,10 +1,11 @@
 import { should } from 'chai';
-import { ImpactMarketInstance } from '../types/truffle-contracts';
+import { ImpactMarketInstance, cUSDInstance } from '../types/truffle-contracts';
 import BigNumber from 'bignumber.js';
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 
 
 const ImpactMarket = artifacts.require('./ImpactMarket.sol') as Truffle.Contract<ImpactMarketInstance>;
+const cUSD = artifacts.require('./test/cUSD.sol') as Truffle.Contract<cUSDInstance>;
 should();
 
 /** @test {ImpactMarket} contract */
@@ -14,10 +15,12 @@ contract('ImpactMarket', async (accounts) => {
     const userA = accounts[2];
     const userB = accounts[3];
     let impactMarketInstance: ImpactMarketInstance;
+    let cUSDInstance: cUSDInstance;
 
     describe('WhitelistedCommunity', () => {
         beforeEach(async () => {
-            impactMarketInstance = await ImpactMarket.new();
+            cUSDInstance = await cUSD.new();
+            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
         });
 
         it('should not be a whitelisted community by default', async () => {
@@ -130,7 +133,8 @@ contract('ImpactMarket', async (accounts) => {
 
     describe('ImpactMarket', () => {
         beforeEach(async () => {
-            impactMarketInstance = await ImpactMarket.new();
+            cUSDInstance = await cUSD.new();
+            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
             await impactMarketInstance.addWhitelistCommunity(
                 communityA,
                 new BigNumber('2'), // ammount by claim
@@ -139,6 +143,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000'), // claim hardcap
                 { from: adminAccount },
             );
+            await cUSDInstance.testFakeFundAddress(communityA, { from: adminAccount });
             await impactMarketInstance.addUser(userA, { from: communityA });
         });
 
@@ -159,36 +164,48 @@ contract('ImpactMarket', async (accounts) => {
         it('should claim after waiting', async () => {
             await time.increase(time.duration.seconds(86405));
             await impactMarketInstance.claim({ from: userA });
+            // (await cUSDInstance.balanceOf(userA)).toString().should.be.equal(new BigNumber(10).pow(18).multipliedBy(2));
         });
     });
 
-    // it('Test the flow', async () => {
-    //     await impactMarketInstance.addWhitelistCommunity(
-    //         communityA,
-    //         new BigNumber('2'), // ammount by claim
-    //         new BigNumber('86400'), // base interval time in ms
-    //         new BigNumber('3600'), // increment interval time in ms
-    //         new BigNumber('1000'), // claim hardcap
-    //         { from: adminAccount },
-    //     );
-    //     await impactMarketInstance.addWhitelistUser(
-    //         userA,
-    //         { from: communityA },
-    //     );
+    describe('Test complete flow', async () => {
+        it('one user to one community', async () => {
+            let tx;
+            let blockData;
+            cUSDInstance = await cUSD.new();
+            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
+            await impactMarketInstance.addWhitelistCommunity(
+                communityA,
+                new BigNumber('2'), // ammount by claim
+                new BigNumber('86400'), // base interval time in ms
+                new BigNumber('3600'), // increment interval time in ms
+                new BigNumber('1000'), // claim hardcap
+                { from: adminAccount },
+            );
+            await cUSDInstance.testFakeFundAddress(communityA, { from: adminAccount });
+            tx = await impactMarketInstance.addUser(
+                userA,
+                { from: communityA },
+            );
+            blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
+            (await impactMarketInstance.isUserInAnyCommunity(userA)).should.be.true;
+            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.true;
+            (await impactMarketInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 86400);
 
-    //     (await impactMarketInstance.isWhitelistUser(userA)).should.be.true;
-    //     (await impactMarketInstance.isWhitelistUserInCommunity(userA, communityA)).should.be.true;
-    //     (await impactMarketInstance.cooldownClaim(userA)).toNumber().should.be.equal(0);
-    //     const tx = await impactMarketInstance.claim({ from: userA });
-    //     const blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
-    //     (await impactMarketInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 3600);
-    //     await expectRevert(
-    //         impactMarketInstance.claim({ from: userA }),
-    //         "Not allowed yet!"
-    //     );
-    //     await time.increase(time.duration.seconds(3605));
-    //     await impactMarketInstance.claim({ from: userA });
-    // });
+            await time.increase(time.duration.seconds(86405)); // base interval + 5
+            tx = await impactMarketInstance.claim({ from: userA });
+            blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
+            (await impactMarketInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 3600);
+            await expectRevert(
+                impactMarketInstance.claim({ from: userA }),
+                "Not allowed yet!"
+            );
+
+            await time.increase(time.duration.seconds(3605)); // increment interval + 5
+            await impactMarketInstance.claim({ from: userA });
+            // (await cUSDInstance.balanceOf(userA)).toString().should.be.equal(new BigNumber(10).pow(18).multipliedBy(2));
+        });
+    });
 });
 
 function objectifyCommunityClaim(community: [BigNumber, BigNumber, BigNumber, BigNumber]) {
