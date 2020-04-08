@@ -1,0 +1,4 @@
+# generic folders
+dist
+node_modules
+coverage
