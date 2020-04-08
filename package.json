@@ -8,6 +8,7 @@
         "pretest": "yarn generate-ts",
         "test": "scripts/test.sh",
         "coverage": "SOLIDITY_COVERAGE=true scripts/test.sh",
+        "precoverage:ci": "yarn generate-ts",
         "coverage:ci": "CI=true SOLIDITY_COVERAGE=true scripts/test.sh",
         "generate-ts": "truffle compile && typechain --target truffle --outDir types/truffle-contracts './build/contracts/*.json'"
     },
