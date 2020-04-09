@@ -1,12 +1,15 @@
 import { should } from 'chai';
-import { ImpactMarketInstance, cUSDInstance } from '../types/truffle-contracts';
+import { ImpactMarketInstance, CommunityInstance, cUSDInstance } from '../types/truffle-contracts';
 import BigNumber from 'bignumber.js';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 
 
 const ImpactMarket = artifacts.require('./ImpactMarket.sol') as Truffle.Contract<ImpactMarketInstance>;
+const Community = artifacts.require('./Community.sol') as Truffle.Contract<CommunityInstance>;
 const cUSD = artifacts.require('./test/cUSD.sol') as Truffle.Contract<cUSDInstance>;
 should();
+
 
 /** @test {ImpactMarket} contract */
 contract('ImpactMarket', async (accounts) => {
@@ -15,36 +18,17 @@ contract('ImpactMarket', async (accounts) => {
     const userA = accounts[2];
     const userB = accounts[3];
     let impactMarketInstance: ImpactMarketInstance;
+    let communityInstance: CommunityInstance;
     let cUSDInstance: cUSDInstance;
 
-    describe('WhitelistedCommunity', () => {
+    describe('Community', () => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
         });
 
-        it('should not be a whitelisted community by default', async () => {
-            (await impactMarketInstance.isWhitelistCommunity(communityA)).should.be.false;
-        });
-
-        it('should not be in any community by default', async () => {
-            (await impactMarketInstance.isUserInAnyCommunity(userA)).should.be.false;
-        });
-
-        it('should not be in a community by default', async () => {
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.false;
-        });
-
-        it('should not be a community by default', async () => {
-            const community = objectifyCommunityClaim(await impactMarketInstance.commnitiesClaim(communityA));
-            community.amountByClaim.toString().should.be.equal('0');
-            community.baseIntervalTime.toString().should.be.equal('0');
-            community.incIntervalTime.toString().should.be.equal('0');
-            community.claimHardCap.toString().should.be.equal('0');
-        });
-
         it('should add a community', async () => {
-            await impactMarketInstance.addWhitelistCommunity(
+            const tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2'), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
@@ -52,28 +36,17 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000'), // claim hardcap
                 { from: adminAccount },
             );
-            const community = objectifyCommunityClaim(await impactMarketInstance.commnitiesClaim(communityA));
-            community.amountByClaim.toString().should.be.equal('2');
-            community.baseIntervalTime.toString().should.be.equal('86400');
-            community.incIntervalTime.toString().should.be.equal('3600');
-            community.claimHardCap.toString().should.be.equal('1000');
+            const communityAddress = tx.logs[0].args[0];
+            communityInstance = await Community.at(communityAddress);
+            (await communityInstance.amountByClaim()).toString().should.be.equal('2');
+            (await communityInstance.baseIntervalTime()).toString().should.be.equal('86400');
+            (await communityInstance.incIntervalTime()).toString().should.be.equal('3600');
+            (await communityInstance.claimHardCap()).toString().should.be.equal('1000');
 
-        });
-
-        it('should renounce from community', async () => {
-            await impactMarketInstance.addWhitelistCommunity(
-                communityA,
-                new BigNumber('2'), // ammount by claim
-                new BigNumber('86400'), // base interval time in ms
-                new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
-                { from: adminAccount },
-            );
-            await impactMarketInstance.renounceWhitelistCommunity({ from: communityA });
         });
 
         it('should remove a community', async () => {
-            await impactMarketInstance.addWhitelistCommunity(
+            const tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2'), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
@@ -81,11 +54,12 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000'), // claim hardcap
                 { from: adminAccount },
             );
-            await impactMarketInstance.removeWhitelistCommunity(communityA, { from: adminAccount });
+            const communityAddress = tx.logs[0].args[0];
+            await impactMarketInstance.removeCommunity(communityAddress, { from: adminAccount });
         });
 
         it('should add user to community', async () => {
-            await impactMarketInstance.addWhitelistCommunity(
+            const tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2'), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
@@ -93,13 +67,15 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000'), // claim hardcap
                 { from: adminAccount },
             );
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.false;
-            await impactMarketInstance.addUser(userA, { from: communityA });
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.true;
+            const communityAddress = tx.logs[0].args[0];
+            communityInstance = await Community.at(communityAddress);
+            (await communityInstance.beneficiaries(userA)).should.be.false;
+            await communityInstance.addBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).should.be.true;
         });
 
         it('should remove user from community', async () => {
-            await impactMarketInstance.addWhitelistCommunity(
+            const tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2'), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
@@ -107,27 +83,13 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000'), // claim hardcap
                 { from: adminAccount },
             );
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.false;
-            await impactMarketInstance.addUser(userA, { from: communityA });
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.true;
-            await impactMarketInstance.removeUser(userA, { from: communityA });
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.false;
-        });
-
-        it('should renounce from community', async () => {
-            await impactMarketInstance.addWhitelistCommunity(
-                communityA,
-                new BigNumber('2'), // ammount by claim
-                new BigNumber('86400'), // base interval time in ms
-                new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
-                { from: adminAccount },
-            );
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.false;
-            await impactMarketInstance.addUser(userA, { from: communityA });
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.true;
-            await impactMarketInstance.renounce({ from: userA });
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.false;
+            const communityAddress = tx.logs[0].args[0];
+            communityInstance = await Community.at(communityAddress);
+            (await communityInstance.beneficiaries(userA)).should.be.false;
+            await communityInstance.addBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).should.be.true;
+            await communityInstance.removeBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).should.be.false;
         });
     });
 
@@ -135,7 +97,7 @@ contract('ImpactMarket', async (accounts) => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
-            await impactMarketInstance.addWhitelistCommunity(
+            const tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2'), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
@@ -143,28 +105,31 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000'), // claim hardcap
                 { from: adminAccount },
             );
-            await cUSDInstance.testFakeFundAddress(communityA, { from: adminAccount });
-            await impactMarketInstance.addUser(userA, { from: communityA });
+            const communityAddress = tx.logs[0].args[0];
+            communityInstance = await Community.at(communityAddress);
+            await cUSDInstance.testFakeFundAddress(communityAddress, { from: adminAccount });
+            await communityInstance.addBeneficiary(userA, { from: communityA });
         });
 
         it('should not claim without belong to community', async () => {
             await expectRevert(
-                impactMarketInstance.claim({ from: userB }),
-                "Not in a community!"
+                communityInstance.claim({ from: userB }),
+                "Not a beneficiary!"
             );
         });
 
         it('should not claim without waiting', async () => {
             await expectRevert(
-                impactMarketInstance.claim({ from: userA }),
+                communityInstance.claim({ from: userA }),
                 "Not allowed yet!"
             );
         });
 
         it('should claim after waiting', async () => {
             await time.increase(time.duration.seconds(86405));
-            await impactMarketInstance.claim({ from: userA });
-            // (await cUSDInstance.balanceOf(userA)).toString().should.be.equal(new BigNumber(10).pow(18).multipliedBy(2));
+            await communityInstance.claim({ from: userA });
+            (await cUSDInstance.balanceOf(userA)).toString()
+                .should.be.equal(new BigNumber(10).pow(18).multipliedBy(2).toString());
         });
     });
 
@@ -174,7 +139,7 @@ contract('ImpactMarket', async (accounts) => {
             let blockData;
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
-            await impactMarketInstance.addWhitelistCommunity(
+            tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2'), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
@@ -182,37 +147,33 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000'), // claim hardcap
                 { from: adminAccount },
             );
-            await cUSDInstance.testFakeFundAddress(communityA, { from: adminAccount });
-            tx = await impactMarketInstance.addUser(
+            const communityAddress = tx.logs[0].args[0];
+            communityInstance = await Community.at(communityAddress);
+            await cUSDInstance.testFakeFundAddress(communityAddress, { from: adminAccount });
+            tx = await communityInstance.addBeneficiary(
                 userA,
                 { from: communityA },
             );
             blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
-            (await impactMarketInstance.isUserInAnyCommunity(userA)).should.be.true;
-            (await impactMarketInstance.isUserInCommunity(userA, communityA)).should.be.true;
-            (await impactMarketInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 86400);
+            (await communityInstance.beneficiaries(userA)).should.be.true;
+            (await communityInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 86400);
 
             await time.increase(time.duration.seconds(86405)); // base interval + 5
-            tx = await impactMarketInstance.claim({ from: userA });
+            tx = await communityInstance.claim({ from: userA });
+            (await cUSDInstance.balanceOf(userA)).toString()
+                .should.be.equal(new BigNumber(10).pow(18).multipliedBy(2).toString());
+
             blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
-            (await impactMarketInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 3600);
+            (await communityInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 3600);
             await expectRevert(
-                impactMarketInstance.claim({ from: userA }),
+                communityInstance.claim({ from: userA }),
                 "Not allowed yet!"
             );
 
             await time.increase(time.duration.seconds(3605)); // increment interval + 5
-            await impactMarketInstance.claim({ from: userA });
-            // (await cUSDInstance.balanceOf(userA)).toString().should.be.equal(new BigNumber(10).pow(18).multipliedBy(2));
+            await communityInstance.claim({ from: userA });
+            (await cUSDInstance.balanceOf(userA)).toString()
+                .should.be.equal(new BigNumber(10).pow(18).multipliedBy(4).toString());
         });
     });
 });
-
-function objectifyCommunityClaim(community: [BigNumber, BigNumber, BigNumber, BigNumber]) {
-    return {
-        amountByClaim: community[0],
-        baseIntervalTime: community[1],
-        incIntervalTime: community[2],
-        claimHardCap: community[3],
-    }
-}
