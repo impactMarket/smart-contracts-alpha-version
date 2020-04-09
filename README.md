@@ -12,3 +12,14 @@
         <a href='https://coveralls.io/github/obernardovieira/impactMarket?branch=master'><img src='https://coveralls.io/repos/github/obernardovieira/impactMarket/badge.svg?branch=master' alt='Coverage Status' /></a>
     </div>
 </div>
+
+### Step by step...
+
+- [x] Design and code base smart contracts
+- [x] Design mobile app
+- [x] Deploy smart contracts to alfajores testnet
+- [x] Integrate app with base smart contract in testnet
+- [x] Refactor smart contracts (integrate with tokens, etc)
+- [ ] Deploy to alfajores testnet, integrating with cUSD
+- [ ] Update mobile app, using new smart contracts, and do some heavy testing (simulate real world)
+- [ ] ...
