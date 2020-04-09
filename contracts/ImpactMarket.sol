@@ -1,43 +1,66 @@
 pragma solidity ^0.5.16;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./WhitelistedCommunity.sol";
+import "@openzeppelin/contracts/access/roles/WhitelistAdminRole.sol";
+import "./Community.sol";
 
 
-contract ImpactMarket is WhitelistedCommunity {
-    mapping(address => uint256) public cooldownClaim;
+/**
+ * @notice Welcome to ImpactMarket, the main contract. This is an
+ * administrative (for now) contract where the admins have control
+ * over the list of communities. Being only able to add and
+ * remoev communities
+ */
+contract ImpactMarket is WhitelistAdminRole {
+    mapping(address => bool) public communities;
     address private cUSDAddress;
 
-    constructor(address _cUSDAddress) public WhitelistedCommunity() {
+    event CommunityAdded(address indexed _addr);
+    event CommunityRemoved(address indexed _addr);
+
+    /**
+     * @dev Constructor only with the cUSD contract address. It
+     * also sets the first admin, which later can add others
+     * and add/remove communities.
+     * @param _cUSDAddress cUSD smart contract address.
+     */
+    constructor(address _cUSDAddress) public WhitelistAdminRole() {
         cUSDAddress = _cUSDAddress;
     }
 
-    modifier onlyUserInAnyCommunity() {
-        require(isUserInAnyCommunity(msg.sender), "Not in a community!");
-        _;
-    }
-
-    function addUser(address _account) public onlyWhitelistCommunity {
-        userToCommunity[_account] = msg.sender;
-        cooldownClaim[_account] = uint256(
-            block.timestamp + commnitiesClaim[msg.sender].baseIntervalTime
+    /**
+     * @dev Add a new community. Can be used only by an admin.
+     * For further information regarding each parameter, see
+     * *Community* smart contract constructor.
+     */
+    function addCommunity(
+        address _firstCoordinator,
+        uint256 _amountByClaim,
+        uint256 _baseIntervalTime,
+        uint256 _incIntervalTime,
+        uint256 _claimHardCap
+    ) public onlyWhitelistAdmin {
+        Community community = new Community(
+            _firstCoordinator,
+            _amountByClaim,
+            _baseIntervalTime,
+            _incIntervalTime,
+            _claimHardCap,
+            cUSDAddress
         );
+        communities[address(community)] = true;
+        emit CommunityAdded(address(community));
     }
 
-    function claim() public onlyUserInAnyCommunity {
-        require(_isReady(), "Not allowed yet!");
-        // ERC20(cUSDAddress).transfer(msg.sender, 2 * 10 ** 18); // TODO: use contract factory
-        _triggerCooldown();
+    /**
+     * @dev Remove an existing community. Can be used only by an admin.
+     */
+    function removeCommunity(address _community) public onlyWhitelistAdmin {
+        communities[_community] = false;
+        emit CommunityRemoved(_community);
     }
 
-    function _triggerCooldown() internal {
-        uint256 cooldownTime = commnitiesClaim[userToCommunity[msg.sender]]
-            .incIntervalTime;
-        cooldownClaim[msg.sender] = uint256(block.timestamp + cooldownTime);
-    }
+    // NOTES:
 
-    function _isReady() internal view returns (bool) {
-        return (cooldownClaim[msg.sender] < block.timestamp ||
-            cooldownClaim[msg.sender] == 0);
-    }
+    // To get all the existing communities, go through
+    // the CommunityAdded events.
 }
