@@ -18,8 +18,10 @@
 - [x] Design and code base smart contracts
 - [x] Design mobile app
 - [x] Deploy smart contracts to alfajores testnet
-- [x] Integrate app with base smart contract in testnet
+- [x] Integrate mobile app with base smart contract in testnet
 - [x] Refactor smart contracts (integrate with tokens, etc)
-- [ ] Deploy to alfajores testnet, integrating with cUSD
-- [ ] Update mobile app, using new smart contracts, and do some heavy testing (simulate real world)
+- [x] Deploy to alfajores testnet, integrating with cUSD
+- [ ] Update mobile app, use new smart contracts
+- [ ] Rework UI
+- [ ] Do some heavy testing (simulate real world)
 - [ ] ...
