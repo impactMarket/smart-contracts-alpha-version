@@ -21,7 +21,7 @@
 - [x] Integrate mobile app with base smart contract in testnet
 - [x] Refactor smart contracts (integrate with tokens, etc)
 - [x] Deploy to alfajores testnet, integrating with cUSD
-- [ ] Update mobile app, use new smart contracts
+- [x] Update mobile app, use new smart contracts
 - [ ] Rework UI
 - [ ] Do some heavy testing (simulate real world)
 - [ ] ...
