@@ -30,6 +30,7 @@ contract Community {
     event CoordinatorRemoved(address indexed _account);
     event BeneficiaryAdded(address indexed _account);
     event BeneficiaryRemoved(address indexed _account);
+    event BeneficiaryClaim(address indexed _account, uint256 _ammount);
 
     /**
      * @dev Constructor with custom fields, choosen by the community.
@@ -116,7 +117,8 @@ contract Community {
                 cooldownClaim[msg.sender] == 0,
             "Not allowed yet!"
         );
-        IERC20(cUSDAddress).transfer(msg.sender, amountByClaim * 10 ** 18);
+        IERC20(cUSDAddress).transfer(msg.sender, amountByClaim);
         cooldownClaim[msg.sender] = uint256(block.timestamp + incIntervalTime);
+        emit BeneficiaryClaim(msg.sender, amountByClaim);
     }
 }

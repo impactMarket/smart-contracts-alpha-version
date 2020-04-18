@@ -11,6 +11,7 @@ const cUSD = artifacts.require('./test/cUSD.sol') as Truffle.Contract<cUSDInstan
 should();
 
 
+BigNumber.config({ EXPONENTIAL_AT: 25 })
 /** @test {ImpactMarket} contract */
 contract('ImpactMarket', async (accounts) => {
     const adminAccount = accounts[0];
@@ -30,25 +31,29 @@ contract('ImpactMarket', async (accounts) => {
         it('should add a community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2'), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
+                new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
             const communityAddress = tx.logs[0].args[0];
             communityInstance = await Community.at(communityAddress);
-            (await communityInstance.amountByClaim()).toString().should.be.equal('2');
+            (await communityInstance.amountByClaim()).toString().should.be.equal(
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)).toString()
+            );
             (await communityInstance.baseIntervalTime()).toString().should.be.equal('86400');
             (await communityInstance.incIntervalTime()).toString().should.be.equal('3600');
-            (await communityInstance.claimHardCap()).toString().should.be.equal('1000');
+            (await communityInstance.claimHardCap()).toString().should.be.equal(
+                new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)).toString()
+            );
 
         });
 
         it('should remove a community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2'), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
@@ -61,7 +66,7 @@ contract('ImpactMarket', async (accounts) => {
         it('should add user to community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2'), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
@@ -77,7 +82,7 @@ contract('ImpactMarket', async (accounts) => {
         it('should remove user from community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2'), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
@@ -99,7 +104,7 @@ contract('ImpactMarket', async (accounts) => {
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2'), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
@@ -141,7 +146,7 @@ contract('ImpactMarket', async (accounts) => {
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
             tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2'), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
