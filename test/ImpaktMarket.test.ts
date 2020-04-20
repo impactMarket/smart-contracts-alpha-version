@@ -31,7 +31,7 @@ contract('ImpactMarket', async (accounts) => {
         it('should add a community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
@@ -53,7 +53,7 @@ contract('ImpactMarket', async (accounts) => {
         it('should remove a community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
@@ -66,7 +66,7 @@ contract('ImpactMarket', async (accounts) => {
         it('should add user to community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
@@ -82,7 +82,7 @@ contract('ImpactMarket', async (accounts) => {
         it('should remove user from community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
@@ -104,7 +104,7 @@ contract('ImpactMarket', async (accounts) => {
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap
@@ -146,7 +146,7 @@ contract('ImpactMarket', async (accounts) => {
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
             tx = await impactMarketInstance.addCommunity(
                 communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // ammount by claim
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000'), // claim hardcap

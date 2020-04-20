@@ -30,7 +30,7 @@ contract Community {
     event CoordinatorRemoved(address indexed _account);
     event BeneficiaryAdded(address indexed _account);
     event BeneficiaryRemoved(address indexed _account);
-    event BeneficiaryClaim(address indexed _account, uint256 _ammount);
+    event BeneficiaryClaim(address indexed _account, uint256 _amount);
 
     /**
      * @dev Constructor with custom fields, choosen by the community.
