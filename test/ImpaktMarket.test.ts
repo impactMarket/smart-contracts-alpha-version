@@ -9,6 +9,12 @@ const ImpactMarket = artifacts.require('./ImpactMarket.sol') as Truffle.Contract
 const Community = artifacts.require('./Community.sol') as Truffle.Contract<CommunityInstance>;
 const cUSD = artifacts.require('./test/cUSD.sol') as Truffle.Contract<cUSDInstance>;
 should();
+enum BeneficiaryState {
+    NONE = '0',
+    Accepted = '1',
+    Locked = '2',
+    Removed = '3',
+}
 
 
 BigNumber.config({ EXPONENTIAL_AT: 25 })
@@ -74,9 +80,27 @@ contract('ImpactMarket', async (accounts) => {
             );
             const communityAddress = tx.logs[0].args[0];
             communityInstance = await Community.at(communityAddress);
-            (await communityInstance.beneficiaries(userA)).should.be.false;
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
             await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).should.be.true;
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Accepted);
+        });
+
+        it('should lock user from community', async () => {
+            const tx = await impactMarketInstance.addCommunity(
+                communityA,
+                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
+                new BigNumber('86400'), // base interval time in ms
+                new BigNumber('3600'), // increment interval time in ms
+                new BigNumber('1000'), // claim hardcap
+                { from: adminAccount },
+            );
+            const communityAddress = tx.logs[0].args[0];
+            communityInstance = await Community.at(communityAddress);
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Accepted);
+            await communityInstance.lockBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Locked);
         });
 
         it('should remove user from community', async () => {
@@ -90,11 +114,11 @@ contract('ImpactMarket', async (accounts) => {
             );
             const communityAddress = tx.logs[0].args[0];
             communityInstance = await Community.at(communityAddress);
-            (await communityInstance.beneficiaries(userA)).should.be.false;
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
             await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).should.be.true;
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Accepted);
             await communityInstance.removeBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).should.be.false;
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Removed);
         });
     });
 
@@ -119,14 +143,30 @@ contract('ImpactMarket', async (accounts) => {
         it('should not claim without belong to community', async () => {
             await expectRevert(
                 communityInstance.claim({ from: userB }),
-                "Not a beneficiary!"
+                "NOT_BENEFICIARY"
+            );
+        });
+
+        it('should not claim after locked from community', async () => {
+            await communityInstance.lockBeneficiary(userA, { from: communityA });
+            await expectRevert(
+                communityInstance.claim({ from: userA }),
+                "LOCKED"
+            );
+        });
+
+        it('should not claim after removed from community', async () => {
+            await communityInstance.removeBeneficiary(userA, { from: communityA });
+            await expectRevert(
+                communityInstance.claim({ from: userA }),
+                "REMOVED"
             );
         });
 
         it('should not claim without waiting', async () => {
             await expectRevert(
                 communityInstance.claim({ from: userA }),
-                "Not allowed yet!"
+                "NOT_YET"
             );
         });
 
@@ -160,7 +200,7 @@ contract('ImpactMarket', async (accounts) => {
                 { from: communityA },
             );
             blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
-            (await communityInstance.beneficiaries(userA)).should.be.true;
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Accepted);
             (await communityInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 86400);
 
             await time.increase(time.duration.seconds(86405)); // base interval + 5
@@ -172,7 +212,7 @@ contract('ImpactMarket', async (accounts) => {
             (await communityInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 3600);
             await expectRevert(
                 communityInstance.claim({ from: userA }),
-                "Not allowed yet!"
+                "NOT_YET"
             );
 
             await time.increase(time.duration.seconds(3605)); // increment interval + 5
