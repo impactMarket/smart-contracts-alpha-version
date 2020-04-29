@@ -22,6 +22,12 @@
 - [x] Refactor smart contracts (integrate with tokens, etc)
 - [x] Deploy to alfajores testnet, integrating with cUSD
 - [x] Update mobile app, use new smart contracts
-- [ ] Rework UI
+- [ ] Transaction cache server for faster loading
+- [ ] Explore and create new communities
+- [ ] Community coordinator page manager
+- [ ] Admin webui (to use until end of phase 2)
+- [ ] Transaction history and pay option
+- [ ] Multi-language
+- [ ] Create UI according to design planing
 - [ ] Do some heavy testing (simulate real world)
 - [ ] ...
