@@ -14,7 +14,14 @@ contract ImpactMarket is WhitelistAdminRole {
     mapping(address => bool) public communities;
     address private cUSDAddress;
 
-    event CommunityAdded(address indexed _addr);
+    event CommunityAdded(
+        address indexed _addr,
+        address indexed _firstCoordinator,
+        uint256 _amountByClaim,
+        uint256 _baseIntervalTime,
+        uint256 _incIntervalTime,
+        uint256 _claimHardCap
+    );
     event CommunityRemoved(address indexed _addr);
 
     /**
@@ -48,7 +55,14 @@ contract ImpactMarket is WhitelistAdminRole {
             cUSDAddress
         );
         communities[address(community)] = true;
-        emit CommunityAdded(address(community));
+        emit CommunityAdded(
+            address(community),
+            _firstCoordinator,
+            _amountByClaim,
+            _baseIntervalTime,
+            _incIntervalTime,
+            _claimHardCap
+        );
     }
 
     /**
