@@ -1,6 +1,6 @@
 {
     "name": "impact-market",
-    "version": "0.0.1-alpha.4",
+    "version": "0.0.1-alpha.5",
     "description": "Decentralized impact-driven 2-sided marketplace to provide financial services to charities and vulnerable beneficiaries.",
     "scripts": {
         "account": "node utils/createAccount.js",
