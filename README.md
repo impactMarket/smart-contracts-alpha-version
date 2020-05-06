@@ -4,6 +4,8 @@
 
 > A decentralized impact-driven 2-sided marketplace to provide financial services to charities and vulnerable beneficiaries in need or living in extreme poverty.
 
+Welcome to the smart-contracts fraction of the impactMarket codebase.
+
 <div align="center">
     <div>
         <a
@@ -13,21 +15,29 @@
     </div>
 </div>
 
-### Step by step...
+## Installation
+
+Use the package manager [yarn](https://yarnpkg.com/) to install dependencies.
+
+```bash
+yarn
+```
+
+## Usage
+
+To deploy in a local network, start ganache with `yarn local-testnet`.
+
+Deploy with `npx truffle deploy --network development`.
+
+**NOTE**: ImpactMarket on Alfajores testnet is currently deployed at **0x03582fE5f7b2F33c572FDFeDEBcc994E50f5586E**.
+
+## Step by step...
 
 - [x] Design and code base smart contracts
-- [x] Design mobile app
 - [x] Deploy smart contracts to alfajores testnet
-- [x] Integrate mobile app with base smart contract in testnet
 - [x] Refactor smart contracts (integrate with tokens, etc)
 - [x] Deploy to alfajores testnet, integrating with cUSD
-- [x] Update mobile app, use new smart contracts
-- [ ] Transaction cache server for faster loading
-- [ ] Explore and create new communities
-- [ ] Community coordinator page manager
-- [ ] Admin webui (to use until end of phase 2)
-- [ ] Transaction history and pay option
-- [ ] Multi-language
-- [ ] Create UI according to design planing
-- [ ] Do some heavy testing (simulate real world)
 - [ ] ...
+
+## License
+[Apache-2.0](LICENSE)
