@@ -11,7 +11,7 @@ const cUSD = artifacts.require('./test/cUSD.sol') as Truffle.Contract<cUSDInstan
 should();
 enum BeneficiaryState {
     NONE = '0',
-    Accepted = '1',
+    Valid = '1',
     Locked = '2',
     Removed = '3',
 }
@@ -37,56 +37,64 @@ contract('ImpactMarket', async (accounts) => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
-        });
-
-        it('should add user to community', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
+                new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
             const communityAddress = tx.logs[0].args[0];
             communityInstance = await Community.at(communityAddress);
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
-            await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Accepted);
         });
 
-        it('should lock user from community', async () => {
-            const tx = await impactMarketInstance.addCommunity(
-                communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
-                new BigNumber('86400'), // base interval time in ms
-                new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
-                { from: adminAccount },
-            );
-            const communityAddress = tx.logs[0].args[0];
-            communityInstance = await Community.at(communityAddress);
+        it('should be able to add user to community', async () => {
             (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
             await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Accepted);
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
+        });
+
+        it('should be able to lock user from community', async () => {
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
             await communityInstance.lockBeneficiary(userA, { from: communityA });
             (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Locked);
         });
 
-        it('should remove user from community', async () => {
-            const tx = await impactMarketInstance.addCommunity(
-                communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
-                new BigNumber('86400'), // base interval time in ms
-                new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
-                { from: adminAccount },
+        it('should not be able to lock an invalid user from community', async () => {
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await expectRevert(
+                communityInstance.lockBeneficiary(userA, { from: communityA }),
+                "NOT_YET"
             );
-            const communityAddress = tx.logs[0].args[0];
-            communityInstance = await Community.at(communityAddress);
+        });
+
+        it('should be able to unlock locked user from community', async () => {
             (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
             await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Accepted);
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
+            await communityInstance.lockBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Locked);
+            await communityInstance.unlockBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
+        });
+
+        it('should not be able to unlock a not locked user from community', async () => {
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
+            await expectRevert(
+                communityInstance.unlockBeneficiary(userA, { from: communityA }),
+                "NOT_YET"
+            );
+        });
+
+        it('should be able to remove user from community', async () => {
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(userA, { from: communityA });
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
             await communityInstance.removeBeneficiary(userA, { from: communityA });
             (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Removed);
         });
@@ -101,7 +109,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
+                new BigNumber('6').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
             const communityAddress = tx.logs[0].args[0];
@@ -146,6 +154,21 @@ contract('ImpactMarket', async (accounts) => {
             (await cUSDInstance.balanceOf(userA)).toString()
                 .should.be.equal(new BigNumber(10).pow(18).multipliedBy(2).toString());
         });
+
+
+        it('should not claim after max claim', async () => {
+            await time.increase(time.duration.seconds(86400 + 5));
+            await communityInstance.claim({ from: userA });
+            await time.increase(time.duration.seconds(86400 + 3600 + 5));
+            await communityInstance.claim({ from: userA });
+            await time.increase(time.duration.seconds(86400 + 3600 + 3600 + 5));
+            await communityInstance.claim({ from: userA });
+            await time.increase(time.duration.seconds(86400 + 3600 + 3600 + 3600 + 5));
+            await expectRevert(
+                communityInstance.claim({ from: userA }),
+                "MAX_CLAIM"
+            );
+        });
     });
 
     describe('Community - Governance', () => {
@@ -157,7 +180,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
+                new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
             const communityAddress = tx.logs[0].args[0];
@@ -183,7 +206,7 @@ contract('ImpactMarket', async (accounts) => {
             await communityInstance.addCoordinator(communityB, { from: communityA });
         });
 
-        it('should be able to add coordinator to community if coordinator', async () => {
+        it('should be able to remove coordinator to community if coordinator', async () => {
             await communityInstance.addCoordinator(communityB, { from: communityA });
             await communityInstance.removeCoordinator(communityB, { from: communityA });
         });
@@ -195,7 +218,7 @@ contract('ImpactMarket', async (accounts) => {
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
         });
 
-        it('should add a community', async () => {
+        it('should be able to add a community if admin', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
@@ -217,13 +240,13 @@ contract('ImpactMarket', async (accounts) => {
 
         });
 
-        it('should remove a community', async () => {
+        it('should be able to remove a community if admin', async () => {
             const tx = await impactMarketInstance.addCommunity(
                 communityA,
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
+                new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
             const communityAddress = tx.logs[0].args[0];
@@ -242,7 +265,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000'), // claim hardcap
+                new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
             const communityAddress = tx.logs[0].args[0];
@@ -253,7 +276,7 @@ contract('ImpactMarket', async (accounts) => {
                 { from: communityA },
             );
             blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Accepted);
+            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
             (await communityInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 86400);
 
             await time.increase(time.duration.seconds(86405)); // base interval + 5
