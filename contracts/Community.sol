@@ -14,11 +14,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  */
 contract Community {
     using Roles for Roles.Role;
-    enum BeneficiaryState { NONE, Accepted, Locked, Removed } // starts by 0
+    enum BeneficiaryState {NONE, Valid, Locked, Removed} // starts by 0 (when user is not added yet)
     Roles.Role private _coordinators;
 
     mapping(address => uint256) public cooldownClaim;
     mapping(address => BeneficiaryState) public beneficiaries;
+    mapping(address => uint256) public claimedByUser;
 
     uint256 public amountByClaim;
     uint256 public baseIntervalTime;
@@ -31,6 +32,7 @@ contract Community {
     event CoordinatorRemoved(address indexed _account);
     event BeneficiaryAdded(address indexed _account);
     event BeneficiaryLocked(address indexed _account);
+    event BeneficiaryUnlocked(address indexed _account);
     event BeneficiaryRemoved(address indexed _account);
     event BeneficiaryClaim(address indexed _account, uint256 _amount);
 
@@ -65,8 +67,14 @@ contract Community {
 
     modifier onlyValidBeneficiary() {
         require(beneficiaries[msg.sender] != BeneficiaryState.Locked, "LOCKED");
-        require(beneficiaries[msg.sender] != BeneficiaryState.Removed, "REMOVED");
-        require(beneficiaries[msg.sender] == BeneficiaryState.Accepted, "NOT_BENEFICIARY");
+        require(
+            beneficiaries[msg.sender] != BeneficiaryState.Removed,
+            "REMOVED"
+        );
+        require(
+            beneficiaries[msg.sender] == BeneficiaryState.Valid,
+            "NOT_BENEFICIARY"
+        );
         _;
     }
 
@@ -99,7 +107,7 @@ contract Community {
      * @dev Allow community coordinators to add beneficiaries.
      */
     function addBeneficiary(address _account) public onlyCoordinators {
-        beneficiaries[_account] = BeneficiaryState.Accepted;
+        beneficiaries[_account] = BeneficiaryState.Valid;
         cooldownClaim[_account] = uint256(block.timestamp + baseIntervalTime);
         emit BeneficiaryAdded(_account);
     }
@@ -108,9 +116,18 @@ contract Community {
      * @dev Allow community coordinators to lock beneficiaries.
      */
     function lockBeneficiary(address _account) public onlyCoordinators {
+        require(beneficiaries[_account] == BeneficiaryState.Valid, "NOT_YET");
         beneficiaries[_account] = BeneficiaryState.Locked;
-        cooldownClaim[_account] = uint256(block.timestamp + baseIntervalTime);
         emit BeneficiaryLocked(_account);
+    }
+
+    /**
+     * @dev Allow community coordinators to unlock locked beneficiaries.
+     */
+    function unlockBeneficiary(address _account) public onlyCoordinators {
+        require(beneficiaries[_account] == BeneficiaryState.Locked, "NOT_YET");
+        beneficiaries[_account] = BeneficiaryState.Valid;
+        emit BeneficiaryUnlocked(_account);
     }
 
     /**
@@ -130,7 +147,9 @@ contract Community {
                 cooldownClaim[msg.sender] == 0,
             "NOT_YET"
         );
+        require((claimedByUser[msg.sender] + amountByClaim) <= claimHardCap, "MAX_CLAIM");
         IERC20(cUSDAddress).transfer(msg.sender, amountByClaim);
+        claimedByUser[msg.sender] = claimedByUser[msg.sender] + amountByClaim;
         cooldownClaim[msg.sender] = uint256(block.timestamp + incIntervalTime);
         emit BeneficiaryClaim(msg.sender, amountByClaim);
     }
