@@ -9,9 +9,9 @@ Welcome to the smart-contracts fraction of the impactMarket codebase.
 <div align="center">
     <div>
         <a
-            href="https://travis-ci.org/obernardovieira/impactMarket"><img
-                src="https://travis-ci.org/obernardovieira/impactMarket.svg?branch=master" /></a>&emsp;
-        <a href='https://coveralls.io/github/obernardovieira/impactMarket?branch=master'><img src='https://coveralls.io/repos/github/obernardovieira/impactMarket/badge.svg?branch=master' alt='Coverage Status' /></a>
+            href="https://travis-ci.org/impactMarket/smart-contracts"><img
+                src="https://travis-ci.org/impactMarket/smart-contracts.svg?branch=master" /></a>&emsp;
+        <a href='https://coveralls.io/github/impactMarket/smart-contracts?branch=master'><img src='https://coveralls.io/repos/github/impactMarket/smart-contracts/badge.svg?branch=master' alt='Coverage Status' /></a>
     </div>
 </div>
 

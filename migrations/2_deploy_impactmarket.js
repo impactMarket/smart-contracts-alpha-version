@@ -9,6 +9,7 @@ module.exports = async (deployer, network, accounts) => {
         const message = 'Job losses in April likely topped 20 million and the unemployment rate hit a post-World War II high';
         web3.eth.sendTransaction({
             from: accounts[0],
+            gas: 188483,
             data: web3.utils.toHex(message),
         });
         // testnet addresses
