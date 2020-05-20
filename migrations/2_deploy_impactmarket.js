@@ -6,12 +6,12 @@ module.exports = async (deployer, network, accounts) => {
         await deployer.deploy(ImpactMarket, cUSDAddress);
         const impactMarket = await ImpactMarket.deployed();
         //
-        const message = 'Job losses in April likely topped 20 million and the unemployment rate hit a post-World War II high';
-        web3.eth.sendTransaction({
-            from: accounts[0],
-            gas: 188483,
-            data: web3.utils.toHex(message),
-        });
+        // const message = 'Job losses in April likely topped 20 million and the unemployment rate hit a post-World War II high';
+        // web3.eth.sendTransaction({
+        //     from: accounts[0],
+        //     gas: 188483,
+        //     data: web3.utils.toHex(message),
+        // });
         // testnet addresses
         // afonso address
         await impactMarket.addWhitelistAdmin('0xd667ff2728475b298e28fe3c4a9ca2ad4fc162f1');
