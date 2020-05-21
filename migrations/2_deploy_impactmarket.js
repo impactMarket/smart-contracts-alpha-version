@@ -18,6 +18,6 @@ module.exports = async (deployer, network, accounts) => {
         // marco address
         await impactMarket.addWhitelistAdmin('0x1ebd10f45daad2ed949cfd0e60ff36c3c941a556');
         // bernardo address
-        await impactMarket.addWhitelistAdmin('0x169f85425e704fbfcf97d452a6414dd551a69e58');
+        await impactMarket.addWhitelistAdmin('0x60f2b1ee6322b3aa2c88f497d87f65a15593f452');
     }
 };
