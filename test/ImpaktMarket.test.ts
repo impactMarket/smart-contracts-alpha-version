@@ -254,47 +254,83 @@ contract('ImpactMarket', async (accounts) => {
         });
     });
 
-    describe('Test complete flow', async () => {
-        it('one user to one community', async () => {
-            let tx;
-            let blockData;
-            cUSDInstance = await cUSD.new();
-            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
-            tx = await impactMarketInstance.addCommunity(
-                communityA,
-                new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
+    describe('Chaos test (complete flow)', async () => {
+        // add community
+        const decimals = new BigNumber(10).pow(18);
+        const addCommunity = async (communityManager: string): Promise<CommunityInstance> => {
+            const tx = await impactMarketInstance.addCommunity(
+                communityManager,
+                new BigNumber('2').multipliedBy(decimals), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
-                new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
+                new BigNumber('1000').multipliedBy(decimals), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[0].args[0];
-            communityInstance = await Community.at(communityAddress);
+            // eslint-disable-next-line prefer-const
+            const communityAddress = tx.logs[0].args[0] as string;
+            const instance = await Community.at(communityAddress);
             await cUSDInstance.testFakeFundAddress(communityAddress, { from: adminAccount });
-            tx = await communityInstance.addBeneficiary(
-                userA,
-                { from: communityA },
+            return instance;
+        }
+        // add beneficiary
+        const addBeneficiary = async (instance: CommunityInstance, beneficiaryAddress: string, communityManagerAddress: string): Promise<void> => {
+            const tx = await instance.addBeneficiary(
+                beneficiaryAddress,
+                { from: communityManagerAddress },
             );
-            blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
-            (await communityInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 86400);
+            const blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
+            (await instance.beneficiaries(beneficiaryAddress)).toString().should.be.equal(BeneficiaryState.Valid);
+            (await instance.cooldownClaim(beneficiaryAddress)).toNumber().should.be.equal(blockData.timestamp + 86400);
+        }
+        // wait claim time
+        const waitClaimTime = async (instance: CommunityInstance, beneficiaryAddress: string): Promise<void> => {
+            const claimed = (await instance.claimedByUser(beneficiaryAddress));
+            let waitIs = 0;
+            if (claimed.isZero()) {
+                waitIs = (await instance.baseIntervalTime()).toNumber();
+            } else {
+                waitIs = (await instance.incIntervalTime()).toNumber();
+            }
+            await time.increase(time.duration.seconds(waitIs + 5)); // wait is + 5
+        }
+        // claim
+        const beneficiaryClaim = async (instance: CommunityInstance, beneficiaryAddress: string): Promise<void> => {
+            const previousBalance = (await cUSDInstance.balanceOf(beneficiaryAddress)).toString();
+            const tx = await instance.claim({ from: beneficiaryAddress });
+            const currentBalance = (await cUSDInstance.balanceOf(beneficiaryAddress)).toString();
+            new BigNumber(previousBalance).plus((await instance.amountByClaim()).toString()).toString()
+                .should.be.equal(currentBalance);
 
-            await time.increase(time.duration.seconds(86405)); // base interval + 5
-            tx = await communityInstance.claim({ from: userA });
-            (await cUSDInstance.balanceOf(userA)).toString()
-                .should.be.equal(new BigNumber(10).pow(18).multipliedBy(2).toString());
+            const blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
+            (await instance.cooldownClaim(beneficiaryAddress)).toNumber()
+                .should.be.equal(blockData.timestamp + (await instance.incIntervalTime()).toNumber());
+        }
 
-            blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
-            (await communityInstance.cooldownClaim(userA)).toNumber().should.be.equal(blockData.timestamp + 3600);
+
+        //
+        beforeEach(async () => {
+            cUSDInstance = await cUSD.new();
+            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
+        });
+        it('one beneficiary to one community', async () => {
+            const communityInstance = await addCommunity(communityA);
+            await addBeneficiary(communityInstance, userA, communityA);
+            await waitClaimTime(communityInstance, userA);
+            await beneficiaryClaim(communityInstance, userA);
             await expectRevert(
-                communityInstance.claim({ from: userA }),
+                beneficiaryClaim(communityInstance, userA),
                 "NOT_YET"
             );
+            await waitClaimTime(communityInstance, userA);
+            await beneficiaryClaim(communityInstance, userA);
+        });
 
-            await time.increase(time.duration.seconds(3605)); // increment interval + 5
-            await communityInstance.claim({ from: userA });
-            (await cUSDInstance.balanceOf(userA)).toString()
-                .should.be.equal(new BigNumber(10).pow(18).multipliedBy(4).toString());
+        it('many beneficiaries to one community', async () => {
+            //
+        });
+
+        it('many beneficiaries to many communities', async () => {
+            //
         });
     });
 });
