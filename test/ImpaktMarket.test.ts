@@ -22,81 +22,81 @@ BigNumber.config({ EXPONENTIAL_AT: 25 })
 contract('ImpactMarket', async (accounts) => {
     const adminAccount = accounts[0];
     // community managers
-    const communityA = accounts[1];
-    const communityB = accounts[2];
-    const communityC = accounts[3];
+    const communityManagerA = accounts[1];
+    const communityManagerB = accounts[2];
+    const communityManagerC = accounts[3];
     // beneficiaries
-    const userA = accounts[4];
-    const userB = accounts[5];
+    const beneficiaryA = accounts[4];
+    const beneficiaryB = accounts[5];
     // contract instances
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let cUSDInstance: cUSDInstance;
 
-    describe('Community - User', () => {
+    describe('Community - Beneficiary', () => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
             const tx = await impactMarketInstance.addCommunity(
-                communityA,
+                communityManagerA,
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[1].args[0];
-            communityInstance = await Community.at(communityAddress);
+            const communityManagerAddress = tx.logs[1].args[0];
+            communityInstance = await Community.at(communityManagerAddress);
         });
 
-        it('should be able to add user to community', async () => {
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
-            await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
+        it('should be able to add beneficiary to community', async () => {
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Valid);
         });
 
-        it('should be able to lock user from community', async () => {
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
-            await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
-            await communityInstance.lockBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Locked);
+        it('should be able to lock beneficiary from community', async () => {
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Valid);
+            await communityInstance.lockBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Locked);
         });
 
-        it('should not be able to lock an invalid user from community', async () => {
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
+        it('should not be able to lock an invalid beneficiary from community', async () => {
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.NONE);
             await expectRevert(
-                communityInstance.lockBeneficiary(userA, { from: communityA }),
+                communityInstance.lockBeneficiary(beneficiaryA, { from: communityManagerA }),
                 "NOT_YET"
             );
         });
 
-        it('should be able to unlock locked user from community', async () => {
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
-            await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
-            await communityInstance.lockBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Locked);
-            await communityInstance.unlockBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
+        it('should be able to unlock locked beneficiary from community', async () => {
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Valid);
+            await communityInstance.lockBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Locked);
+            await communityInstance.unlockBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Valid);
         });
 
-        it('should not be able to unlock a not locked user from community', async () => {
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
-            await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
+        it('should not be able to unlock a not locked beneficiary from community', async () => {
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Valid);
             await expectRevert(
-                communityInstance.unlockBeneficiary(userA, { from: communityA }),
+                communityInstance.unlockBeneficiary(beneficiaryA, { from: communityManagerA }),
                 "NOT_YET"
             );
         });
 
-        it('should be able to remove user from community', async () => {
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.NONE);
-            await communityInstance.addBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Valid);
-            await communityInstance.removeBeneficiary(userA, { from: communityA });
-            (await communityInstance.beneficiaries(userA)).toString().should.be.equal(BeneficiaryState.Removed);
+        it('should be able to remove beneficiary from community', async () => {
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.NONE);
+            await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Valid);
+            await communityInstance.removeBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Removed);
         });
     });
 
@@ -105,81 +105,81 @@ contract('ImpactMarket', async (accounts) => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
             const tx = await impactMarketInstance.addCommunity(
-                communityA,
+                communityManagerA,
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('6').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[1].args[0];
-            communityInstance = await Community.at(communityAddress);
-            await cUSDInstance.testFakeFundAddress(communityAddress, { from: adminAccount });
-            await communityInstance.addBeneficiary(userA, { from: communityA });
+            const communityManagerAddress = tx.logs[1].args[0];
+            communityInstance = await Community.at(communityManagerAddress);
+            await cUSDInstance.testFakeFundAddress(communityManagerAddress, { from: adminAccount });
+            await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });
         });
 
         it('should not claim without belong to community', async () => {
             await expectRevert(
-                communityInstance.claim({ from: userB }),
+                communityInstance.claim({ from: beneficiaryB }),
                 "NOT_BENEFICIARY"
             );
         });
 
         it('should not claim after locked from community', async () => {
-            await communityInstance.lockBeneficiary(userA, { from: communityA });
+            await communityInstance.lockBeneficiary(beneficiaryA, { from: communityManagerA });
             await expectRevert(
-                communityInstance.claim({ from: userA }),
+                communityInstance.claim({ from: beneficiaryA }),
                 "LOCKED"
             );
         });
 
         it('should not claim after removed from community', async () => {
-            await communityInstance.removeBeneficiary(userA, { from: communityA });
+            await communityInstance.removeBeneficiary(beneficiaryA, { from: communityManagerA });
             await expectRevert(
-                communityInstance.claim({ from: userA }),
+                communityInstance.claim({ from: beneficiaryA }),
                 "REMOVED"
             );
         });
 
         it('should not claim without waiting', async () => {
             await expectRevert(
-                communityInstance.claim({ from: userA }),
+                communityInstance.claim({ from: beneficiaryA }),
                 "NOT_YET"
             );
         });
 
         it('should not claim without waiting enough', async () => {
             await time.increase(time.duration.seconds(86400 + 5));
-            await communityInstance.claim({ from: userA });
+            await communityInstance.claim({ from: beneficiaryA });
             await time.increase(time.duration.seconds(3600 + 5));
             await expectRevert(
-                communityInstance.claim({ from: userA }),
+                communityInstance.claim({ from: beneficiaryA }),
                 "NOT_YET"
             );
             await time.increase(time.duration.seconds(3600 + 5));
             await expectRevert(
-                communityInstance.claim({ from: userA }),
+                communityInstance.claim({ from: beneficiaryA }),
                 "NOT_YET"
             );
         });
 
         it('should claim after waiting', async () => {
             await time.increase(time.duration.seconds(86405));
-            await communityInstance.claim({ from: userA });
-            (await cUSDInstance.balanceOf(userA)).toString()
+            await communityInstance.claim({ from: beneficiaryA });
+            (await cUSDInstance.balanceOf(beneficiaryA)).toString()
                 .should.be.equal(new BigNumber(10).pow(18).multipliedBy(2).toString());
         });
 
         it('should not claim after max claim', async () => {
             await time.increase(time.duration.seconds(86400 + 5));
-            await communityInstance.claim({ from: userA });
+            await communityInstance.claim({ from: beneficiaryA });
             await time.increase(time.duration.seconds(86400 + 3600 + 5));
-            await communityInstance.claim({ from: userA });
+            await communityInstance.claim({ from: beneficiaryA });
             await time.increase(time.duration.seconds(86400 + 3600 + 3600 + 5));
-            await communityInstance.claim({ from: userA });
+            await communityInstance.claim({ from: beneficiaryA });
             await time.increase(time.duration.seconds(86400 + 3600 + 3600 + 3600 + 5));
             await expectRevert(
-                communityInstance.claim({ from: userA }),
+                communityInstance.claim({ from: beneficiaryA }),
                 "MAX_CLAIM"
             );
         });
@@ -190,39 +190,39 @@ contract('ImpactMarket', async (accounts) => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
             const tx = await impactMarketInstance.addCommunity(
-                communityA,
+                communityManagerA,
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[1].args[0];
-            communityInstance = await Community.at(communityAddress);
+            const communityManagerAddress = tx.logs[1].args[0];
+            communityInstance = await Community.at(communityManagerAddress);
         });
 
         it('should not be able to add coordinator to community if not coordinator', async () => {
             await expectRevert(
-                communityInstance.addCoordinator(communityB, { from: communityC }),
+                communityInstance.addCoordinator(communityManagerB, { from: communityManagerC }),
                 "NOT_COORDINATOR"
             );
         });
 
         it('should not be able to remove coordinator from community if not coordinator', async () => {
-            await communityInstance.addCoordinator(communityB, { from: communityA });
+            await communityInstance.addCoordinator(communityManagerB, { from: communityManagerA });
             await expectRevert(
-                communityInstance.removeCoordinator(communityB, { from: communityC }),
+                communityInstance.removeCoordinator(communityManagerB, { from: communityManagerC }),
                 "NOT_COORDINATOR"
             );
         });
 
         it('should be able to add coordinator to community if coordinator', async () => {
-            await communityInstance.addCoordinator(communityB, { from: communityA });
+            await communityInstance.addCoordinator(communityManagerB, { from: communityManagerA });
         });
 
         it('should be able to remove coordinator to community if coordinator', async () => {
-            await communityInstance.addCoordinator(communityB, { from: communityA });
-            await communityInstance.removeCoordinator(communityB, { from: communityA });
+            await communityInstance.addCoordinator(communityManagerB, { from: communityManagerA });
+            await communityInstance.removeCoordinator(communityManagerB, { from: communityManagerA });
         });
     });
 
@@ -234,15 +234,15 @@ contract('ImpactMarket', async (accounts) => {
 
         it('should be able to add a community if admin', async () => {
             const tx = await impactMarketInstance.addCommunity(
-                communityA,
+                communityManagerA,
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[1].args[0];
-            communityInstance = await Community.at(communityAddress);
+            const communityManagerAddress = tx.logs[1].args[0];
+            communityInstance = await Community.at(communityManagerAddress);
             (await communityInstance.amountByClaim()).toString().should.be.equal(
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)).toString()
             );
@@ -256,15 +256,15 @@ contract('ImpactMarket', async (accounts) => {
 
         it('should be able to remove a community if admin', async () => {
             const tx = await impactMarketInstance.addCommunity(
-                communityA,
+                communityManagerA,
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)), // amount by claim
                 new BigNumber('86400'), // base interval time in ms
                 new BigNumber('3600'), // increment interval time in ms
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[1].args[0];
-            await impactMarketInstance.removeCommunity(communityAddress, { from: adminAccount });
+            const communityManagerAddress = tx.logs[1].args[0];
+            await impactMarketInstance.removeCommunity(communityManagerAddress, { from: adminAccount });
         });
     });
 
@@ -281,9 +281,9 @@ contract('ImpactMarket', async (accounts) => {
                 { from: adminAccount },
             );
             // eslint-disable-next-line prefer-const
-            const communityAddress = tx.logs[1].args[0] as string;
-            const instance = await Community.at(communityAddress);
-            await cUSDInstance.testFakeFundAddress(communityAddress, { from: adminAccount });
+            const communityManagerAddress = tx.logs[1].args[0] as string;
+            const instance = await Community.at(communityManagerAddress);
+            await cUSDInstance.testFakeFundAddress(communityManagerAddress, { from: adminAccount });
             return instance;
         }
         // add beneficiary
@@ -320,16 +320,16 @@ contract('ImpactMarket', async (accounts) => {
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
         });
         it('one beneficiary to one community', async () => {
-            const communityInstance = await addCommunity(communityA);
-            await addBeneficiary(communityInstance, userA, communityA);
-            await waitClaimTime(communityInstance, userA);
-            await beneficiaryClaim(communityInstance, userA);
+            const communityInstance = await addCommunity(communityManagerA);
+            await addBeneficiary(communityInstance, beneficiaryA, communityManagerA);
+            await waitClaimTime(communityInstance, beneficiaryA);
+            await beneficiaryClaim(communityInstance, beneficiaryA);
             await expectRevert(
-                beneficiaryClaim(communityInstance, userA),
+                beneficiaryClaim(communityInstance, beneficiaryA),
                 "NOT_YET"
             );
-            await waitClaimTime(communityInstance, userA);
-            await beneficiaryClaim(communityInstance, userA);
+            await waitClaimTime(communityInstance, beneficiaryA);
+            await beneficiaryClaim(communityInstance, beneficiaryA);
         });
 
         it('many beneficiaries to one community', async () => {
