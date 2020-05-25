@@ -1,6 +1,6 @@
-pragma solidity ^0.5.16;
+pragma solidity ^0.6.0;
 
-import "@openzeppelin/contracts/access/Roles.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
@@ -12,10 +12,9 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * in one single contract. Each community has it's own members and
  * and coordinators.
  */
-contract Community {
-    using Roles for Roles.Role;
+contract Community is AccessControl {
+    bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
     enum BeneficiaryState {NONE, Valid, Locked, Removed} // starts by 0 (when user is not added yet)
-    Roles.Role private _coordinators;
 
     mapping(address => uint256) public cooldown;
     mapping(address => uint256) public lastInterval;
@@ -55,7 +54,8 @@ contract Community {
         uint256 _claimHardCap,
         address _cUSDAddress
     ) public {
-        _coordinators.add(_firstCoordinator);
+        _setupRole(COORDINATOR_ROLE, _firstCoordinator);
+        _setRoleAdmin(COORDINATOR_ROLE, COORDINATOR_ROLE);
         emit CoordinatorAdded(_firstCoordinator);
 
         amountByClaim = _amountByClaim;
@@ -80,19 +80,19 @@ contract Community {
     }
 
     modifier onlyCoordinators() {
-        require(isCoordinator(msg.sender), "NOT_COORDINATOR");
+        require(hasRole(COORDINATOR_ROLE, msg.sender), "NOT_COORDINATOR");
         _;
     }
 
     function isCoordinator(address _account) public view returns (bool) {
-        return _coordinators.has(_account);
+        return hasRole(COORDINATOR_ROLE, _account);
     }
 
     /**
      * @dev Allow community coordinators to add other coordinators.
      */
     function addCoordinator(address _account) public onlyCoordinators {
-        _coordinators.add(_account);
+        grantRole(COORDINATOR_ROLE, _account);
         emit CoordinatorAdded(_account);
     }
 
@@ -100,7 +100,7 @@ contract Community {
      * @dev Allow community coordinators to remove other coordinators.
      */
     function removeCoordinator(address _account) public onlyCoordinators {
-        _coordinators.remove(_account);
+        revokeRole(COORDINATOR_ROLE, _account);
         emit CoordinatorRemoved(_account);
     }
 

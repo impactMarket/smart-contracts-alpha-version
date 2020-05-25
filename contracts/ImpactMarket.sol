@@ -1,6 +1,6 @@
-pragma solidity ^0.5.16;
+pragma solidity ^0.6.0;
 
-import "@openzeppelin/contracts/access/roles/WhitelistAdminRole.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./Community.sol";
 
 
@@ -10,7 +10,9 @@ import "./Community.sol";
  * over the list of communities. Being only able to add and
  * remoev communities
  */
-contract ImpactMarket is WhitelistAdminRole {
+contract ImpactMarket is AccessControl {
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
+
     mapping(address => bool) public communities;
     address private cUSDAddress;
 
@@ -30,8 +32,15 @@ contract ImpactMarket is WhitelistAdminRole {
      * and add/remove communities.
      * @param _cUSDAddress cUSD smart contract address.
      */
-    constructor(address _cUSDAddress) public WhitelistAdminRole() {
+    constructor(address _cUSDAddress) public {
+        _setupRole(ADMIN_ROLE, msg.sender);
+        _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         cUSDAddress = _cUSDAddress;
+    }
+
+    modifier onlyAdmin() {
+        require(hasRole(ADMIN_ROLE, msg.sender), "NOT_ADMIN");
+        _;
     }
 
     /**
@@ -45,7 +54,7 @@ contract ImpactMarket is WhitelistAdminRole {
         uint256 _baseIntervalTime,
         uint256 _incIntervalTime,
         uint256 _claimHardCap
-    ) public onlyWhitelistAdmin {
+    ) public onlyAdmin {
         Community community = new Community(
             _firstCoordinator,
             _amountByClaim,
@@ -68,9 +77,17 @@ contract ImpactMarket is WhitelistAdminRole {
     /**
      * @dev Remove an existing community. Can be used only by an admin.
      */
-    function removeCommunity(address _community) public onlyWhitelistAdmin {
+    function removeCommunity(address _community) public onlyAdmin {
         communities[_community] = false;
         emit CommunityRemoved(_community);
+    }
+
+    function addAdmin(address _account) public onlyAdmin {
+        grantRole(ADMIN_ROLE, _account);
+    }
+
+    function removeAdmin(address _account) public onlyAdmin {
+        revokeRole(ADMIN_ROLE, _account);
     }
 
     // NOTES:

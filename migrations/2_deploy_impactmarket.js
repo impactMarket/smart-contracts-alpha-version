@@ -14,10 +14,10 @@ module.exports = async (deployer, network, accounts) => {
         // });
         // testnet addresses
         // afonso address
-        await impactMarket.addWhitelistAdmin('0xd667ff2728475b298e28fe3c4a9ca2ad4fc162f1');
+        await impactMarket.addAdmin('0xd667ff2728475b298e28fe3c4a9ca2ad4fc162f1');
         // marco address
-        await impactMarket.addWhitelistAdmin('0x1ebd10f45daad2ed949cfd0e60ff36c3c941a556');
+        await impactMarket.addAdmin('0x1ebd10f45daad2ed949cfd0e60ff36c3c941a556');
         // bernardo address
-        await impactMarket.addWhitelistAdmin('0x60f2b1ee6322b3aa2c88f497d87f65a15593f452');
+        await impactMarket.addAdmin('0x60f2b1ee6322b3aa2c88f497d87f65a15593f452');
     }
 };

@@ -45,7 +45,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[0].args[0];
+            const communityAddress = tx.logs[1].args[0];
             communityInstance = await Community.at(communityAddress);
         });
 
@@ -112,7 +112,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('6').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[0].args[0];
+            const communityAddress = tx.logs[1].args[0];
             communityInstance = await Community.at(communityAddress);
             await cUSDInstance.testFakeFundAddress(communityAddress, { from: adminAccount });
             await communityInstance.addBeneficiary(userA, { from: communityA });
@@ -197,7 +197,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[0].args[0];
+            const communityAddress = tx.logs[1].args[0];
             communityInstance = await Community.at(communityAddress);
         });
 
@@ -241,7 +241,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[0].args[0];
+            const communityAddress = tx.logs[1].args[0];
             communityInstance = await Community.at(communityAddress);
             (await communityInstance.amountByClaim()).toString().should.be.equal(
                 new BigNumber('2').multipliedBy(new BigNumber(10).pow(18)).toString()
@@ -263,7 +263,7 @@ contract('ImpactMarket', async (accounts) => {
                 new BigNumber('1000').multipliedBy(new BigNumber(10).pow(18)), // claim hardcap
                 { from: adminAccount },
             );
-            const communityAddress = tx.logs[0].args[0];
+            const communityAddress = tx.logs[1].args[0];
             await impactMarketInstance.removeCommunity(communityAddress, { from: adminAccount });
         });
     });
@@ -281,7 +281,7 @@ contract('ImpactMarket', async (accounts) => {
                 { from: adminAccount },
             );
             // eslint-disable-next-line prefer-const
-            const communityAddress = tx.logs[0].args[0] as string;
+            const communityAddress = tx.logs[1].args[0] as string;
             const instance = await Community.at(communityAddress);
             await cUSDInstance.testFakeFundAddress(communityAddress, { from: adminAccount });
             return instance;

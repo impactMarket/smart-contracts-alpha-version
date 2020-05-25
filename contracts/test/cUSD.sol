@@ -1,14 +1,14 @@
-pragma solidity ^0.5.16;
+pragma solidity ^0.6.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20Mintable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 
-contract cUSD is ERC20Mintable {
-    constructor() MinterRole() public {
+contract cUSD is ERC20 {
+    constructor() public ERC20("cUSD", "cUSD") {
         //
     }
 
     function testFakeFundAddress(address _addr) public {
-        mint(_addr, 500 * 10 ** 18);
+        _mint(_addr, 500 * 10 ** 18);
     }
 }

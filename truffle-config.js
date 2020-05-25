@@ -53,5 +53,12 @@ module.exports = {
         timeout: 100000,
     },
 
-    plugins: ['solidity-coverage']
+    plugins: ['solidity-coverage'],
+
+    // Configure your compilers
+    compilers: {
+        solc: {
+            version: '0.6.5', // Fetch exact version from solc-bin (default: truffle's version)
+        },
+    },
 };
