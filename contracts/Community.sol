@@ -17,9 +17,10 @@ contract Community {
     enum BeneficiaryState {NONE, Valid, Locked, Removed} // starts by 0 (when user is not added yet)
     Roles.Role private _coordinators;
 
-    mapping(address => uint256) public cooldownClaim;
+    mapping(address => uint256) public cooldown;
+    mapping(address => uint256) public lastInterval;
+    mapping(address => uint256) public claimed;
     mapping(address => BeneficiaryState) public beneficiaries;
-    mapping(address => uint256) public claimedByUser;
 
     uint256 public amountByClaim;
     uint256 public baseIntervalTime;
@@ -108,7 +109,8 @@ contract Community {
      */
     function addBeneficiary(address _account) public onlyCoordinators {
         beneficiaries[_account] = BeneficiaryState.Valid;
-        cooldownClaim[_account] = uint256(block.timestamp + baseIntervalTime);
+        cooldown[_account] = uint256(block.timestamp + baseIntervalTime);
+        lastInterval[_account] = baseIntervalTime;
         emit BeneficiaryAdded(_account);
     }
 
@@ -143,14 +145,15 @@ contract Community {
      */
     function claim() public onlyValidBeneficiary {
         require(
-            cooldownClaim[msg.sender] < block.timestamp ||
-                cooldownClaim[msg.sender] == 0,
+            cooldown[msg.sender] < block.timestamp ||
+                cooldown[msg.sender] == 0,
             "NOT_YET"
         );
-        require((claimedByUser[msg.sender] + amountByClaim) <= claimHardCap, "MAX_CLAIM");
+        require((claimed[msg.sender] + amountByClaim) <= claimHardCap, "MAX_CLAIM");
         IERC20(cUSDAddress).transfer(msg.sender, amountByClaim);
-        claimedByUser[msg.sender] = claimedByUser[msg.sender] + amountByClaim;
-        cooldownClaim[msg.sender] = uint256(block.timestamp + incIntervalTime);
+        claimed[msg.sender] = claimed[msg.sender] + amountByClaim;
+        lastInterval[msg.sender] = lastInterval[msg.sender] + incIntervalTime;
+        cooldown[msg.sender] = uint256(block.timestamp + lastInterval[msg.sender]);
         emit BeneficiaryClaim(msg.sender, amountByClaim);
     }
 }
