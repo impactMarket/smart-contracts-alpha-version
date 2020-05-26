@@ -28,6 +28,8 @@ contract('ImpactMarket', async (accounts) => {
     // beneficiaries
     const beneficiaryA = accounts[4];
     const beneficiaryB = accounts[5];
+    const beneficiaryC = accounts[6];
+    const beneficiaryD = accounts[7];
     // contract instances
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
@@ -345,7 +347,43 @@ contract('ImpactMarket', async (accounts) => {
         });
 
         it('many beneficiaries to one community', async () => {
-            //
+            const communityInstance = await addCommunity(communityManagerA);
+            const previousCommunityBalance = new BigNumber((await cUSDInstance.balanceOf(communityInstance.address)).toString());
+            await addBeneficiary(communityInstance, beneficiaryA, communityManagerA);
+            await addBeneficiary(communityInstance, beneficiaryB, communityManagerA);
+            await addBeneficiary(communityInstance, beneficiaryC, communityManagerA);
+            await addBeneficiary(communityInstance, beneficiaryD, communityManagerA);
+            // beneficiary A claims twice
+            await waitClaimTime(communityInstance, beneficiaryA);
+            await beneficiaryClaim(communityInstance, beneficiaryA);
+            await waitClaimTime(communityInstance, beneficiaryA);
+            await beneficiaryClaim(communityInstance, beneficiaryA);
+            // beneficiary B claims once
+            await waitClaimTime(communityInstance, beneficiaryB);
+            await beneficiaryClaim(communityInstance, beneficiaryB);
+            // beneficiary C claims it all
+            const claimAmount = new BigNumber((await communityInstance.amountByClaim()).toString()).div(decimals).toNumber();
+            const maxClaimAmount = new BigNumber((await communityInstance.claimHardCap()).toString()).div(decimals).toNumber();
+            const maxClaimsPerUser = maxClaimAmount / claimAmount;
+            for (let index = 0; index < maxClaimsPerUser; index++) {
+                await waitClaimTime(communityInstance, beneficiaryC);
+                await beneficiaryClaim(communityInstance, beneficiaryC);
+            }
+            // beneficiary B can still claim
+            await waitClaimTime(communityInstance, beneficiaryB);
+            await beneficiaryClaim(communityInstance, beneficiaryB);
+            // beneficiary A can still claim
+            await waitClaimTime(communityInstance, beneficiaryA);
+            await beneficiaryClaim(communityInstance, beneficiaryA);
+            // beneficiary C can't claim anymore
+            await waitClaimTime(communityInstance, beneficiaryC);
+            await expectRevert(
+                beneficiaryClaim(communityInstance, beneficiaryC),
+                "MAX_CLAIM"
+            );
+            const currentCommunityBalance = new BigNumber((await cUSDInstance.balanceOf(communityInstance.address)).toString());
+            previousCommunityBalance.minus(currentCommunityBalance).toString().should.be
+                .equal(new BigNumber(claimAmount * (5 + maxClaimsPerUser)).multipliedBy(decimals).toString());
         });
 
         it('many beneficiaries to many communities', async () => {
