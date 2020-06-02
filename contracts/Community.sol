@@ -55,6 +55,9 @@ contract Community is AccessControl {
         uint256 _claimHardCap,
         address _cUSDAddress
     ) public {
+        require(_baseIntervalTime > _incIntervalTime, "");
+        require(_claimHardCap > _amountByClaim, "");
+
         _setupRole(COORDINATOR_ROLE, _firstCoordinator);
         _setRoleAdmin(COORDINATOR_ROLE, COORDINATOR_ROLE);
         emit CoordinatorAdded(_firstCoordinator);
@@ -110,8 +113,8 @@ contract Community is AccessControl {
      */
     function addBeneficiary(address _account) public onlyCoordinators {
         beneficiaries[_account] = BeneficiaryState.Valid;
-        cooldown[_account] = uint256(block.timestamp + baseIntervalTime);
-        lastInterval[_account] = baseIntervalTime;
+        cooldown[_account] = block.timestamp;
+        lastInterval[_account] = uint256(baseIntervalTime - incIntervalTime);
         emit BeneficiaryAdded(_account);
     }
 
@@ -145,16 +148,17 @@ contract Community is AccessControl {
      * @dev Allow beneficiaries to claim.
      */
     function claim() public onlyValidBeneficiary {
+        require(cooldown[msg.sender] <= block.timestamp, "NOT_YET");
         require(
-            cooldown[msg.sender] < block.timestamp ||
-                cooldown[msg.sender] == 0,
-            "NOT_YET"
+            (claimed[msg.sender] + amountByClaim) <= claimHardCap,
+            "MAX_CLAIM"
         );
-        require((claimed[msg.sender] + amountByClaim) <= claimHardCap, "MAX_CLAIM");
         IERC20(cUSDAddress).transfer(msg.sender, amountByClaim);
         claimed[msg.sender] = claimed[msg.sender] + amountByClaim;
         lastInterval[msg.sender] = lastInterval[msg.sender] + incIntervalTime;
-        cooldown[msg.sender] = uint256(block.timestamp + lastInterval[msg.sender]);
+        cooldown[msg.sender] = uint256(
+            block.timestamp + lastInterval[msg.sender]
+        );
         emit BeneficiaryClaim(msg.sender, amountByClaim);
     }
 }

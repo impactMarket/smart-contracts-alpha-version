@@ -151,16 +151,10 @@ contract('ImpactMarket', async (accounts) => {
             );
         });
 
-        it('should not claim without waiting', async () => {
-            await expectRevert(
-                communityInstance.claim({ from: beneficiaryA }),
-                "NOT_YET"
-            );
-        });
-
         it('should not claim without waiting enough', async () => {
             const baseInterval = (await communityInstance.baseIntervalTime()).toNumber();
             const incrementalInterval = (await communityInstance.incIntervalTime()).toNumber();
+            await communityInstance.claim({ from: beneficiaryA });
             await time.increase(time.duration.seconds(baseInterval + 5));
             await communityInstance.claim({ from: beneficiaryA });
             await time.increase(time.duration.seconds(incrementalInterval + 5));
@@ -188,7 +182,8 @@ contract('ImpactMarket', async (accounts) => {
             const incrementalInterval = (await communityInstance.incIntervalTime()).toNumber();
             const claimAmount = new BigNumber((await communityInstance.amountByClaim()).toString()).div(decimals).toNumber();
             const maxClaimAmount = new BigNumber((await communityInstance.claimHardCap()).toString()).div(decimals).toNumber();
-            for (let index = 0; index < maxClaimAmount / claimAmount; index++) {
+            await communityInstance.claim({ from: beneficiaryA });
+            for (let index = 0; index < (maxClaimAmount / claimAmount) - 1; index++) {
                 await time.increase(time.duration.seconds(baseInterval + incrementalInterval * index + 5));
                 await communityInstance.claim({ from: beneficiaryA });
             }
@@ -308,7 +303,7 @@ contract('ImpactMarket', async (accounts) => {
             );
             const blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
             (await instance.beneficiaries(beneficiaryAddress)).toString().should.be.equal(BeneficiaryState.Valid);
-            (await instance.cooldown(beneficiaryAddress)).toNumber().should.be.equal(blockData.timestamp + 86400);
+            (await instance.cooldown(beneficiaryAddress)).toNumber().should.be.equal(blockData.timestamp);
         }
         // wait claim time
         const waitClaimTime = async (instance: CommunityInstance, beneficiaryAddress: string): Promise<void> => {
