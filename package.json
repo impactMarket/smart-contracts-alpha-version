@@ -1,5 +1,5 @@
 {
-    "name": "impact-market",
+    "name": "@impact-market/smart-contracts",
     "version": "0.0.1-alpha.8",
     "description": "Decentralized impact-driven 2-sided marketplace to provide financial services to charities and vulnerable beneficiaries.",
     "scripts": {
@@ -14,15 +14,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/obernardovieira/impactMarket.git"
+        "url": "git+https://github.com/impactMarket/smart-contracts.git"
     },
-    "keywords": [],
-    "author": "",
+    "author": "impact-market",
     "license": "Apache-2.0",
     "bugs": {
-        "url": "https://github.com/obernardovieira/impactMarket/issues"
+        "url": "https://github.com/impactMarket/smart-contracts/issues"
     },
-    "homepage": "https://github.com/obernardovieira/impactMarket#readme",
+    "homepage": "https://github.com/impactMarket/smart-contracts#readme",
     "dependencies": {
         "@celo/contractkit": "0.2.14",
         "@openzeppelin/contracts": "3.0.0"
