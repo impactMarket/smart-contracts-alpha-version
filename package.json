@@ -28,24 +28,26 @@
     },
     "devDependencies": {
         "@celo/ganache-cli": "6.6.1",
+        "@codechecks/client": "0.1.10",
         "@openzeppelin/test-helpers": "0.5.5",
         "@types/bignumber.js": "5.0.0",
         "@types/chai": "4.2.10",
         "@types/mocha": "7.0.2",
         "@types/node": "12.12.31",
+        "@typescript-eslint/eslint-plugin": "2.19.0",
+        "@typescript-eslint/parser": "2.19.0",
         "bignumber.js": "9.0.0",
         "chai": "4.2.0",
+        "coveralls": "3.0.11",
+        "eslint": "6.8.0",
+        "eth-gas-reporter": "0.2.17",
+        "solidity-coverage": "0.7.1",
         "truffle": "5.1.18",
         "truffle-typings": "1.0.8",
         "ts-generator": "0.0.8",
         "ts-node": "8.6.2",
         "typechain": "1.0.5",
         "typechain-target-truffle": "1.0.2",
-        "typescript": "3.8.3",
-        "solidity-coverage": "0.7.1",
-        "coveralls": "3.0.11",
-        "@typescript-eslint/eslint-plugin": "2.19.0",
-        "@typescript-eslint/parser": "2.19.0",
-        "eslint": "6.8.0"
+        "typescript": "3.8.3"
     }
 }

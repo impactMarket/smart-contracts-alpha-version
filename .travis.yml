@@ -1,18 +1,8 @@
+os: linux
 dist: xenial
-
 language: node_js
-
-services:
-    - docker
-
-env:
-    - DOCKER_COMPOSE_VERSION=1.4.2
-
-node_js:
-    - "lts/dubnium"
-
-install:
-    - yarn
-
+node_js: "lts/dubnium"
+install: yarn
 script:
     - yarn coverage:ci
+    - npx codechecks

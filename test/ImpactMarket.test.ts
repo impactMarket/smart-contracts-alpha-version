@@ -38,8 +38,8 @@ contract('ImpactMarket', async (accounts) => {
     const decimals = new BigNumber(10).pow(18);
     const hour = time.duration.hours(1);
     const day = time.duration.days(1);
-    const week = time.duration.weeks(1);
-    const month = time.duration.days(30);
+    // const week = time.duration.weeks(1);
+    // const month = time.duration.days(30);
     const claimAmountTwo = new BigNumber('2').multipliedBy(decimals);
     const maxClaimTen = new BigNumber('10').multipliedBy(decimals);
 
