@@ -1,8 +1,14 @@
 os: linux
 dist: xenial
 language: node_js
-node_js: "lts/dubnium"
+node_js: lts/dubnium
 install: yarn
-script:
-    - yarn coverage:ci
-    - npx codechecks
+jobs:
+  include:
+    - stage: test
+      script:
+        - yarn test:ci
+        - npx codechecks
+    -
+      script:
+        - yarn coverage:ci

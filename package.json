@@ -6,6 +6,8 @@
         "account": "node utils/createAccount.js",
         "pretest": "yarn generate-ts",
         "test": "scripts/test.sh",
+        "pretest:ci": "yarn generate-ts",
+        "test:ci": "CI=true scripts/test.sh",
         "coverage": "SOLIDITY_COVERAGE=true scripts/test.sh",
         "precoverage:ci": "yarn generate-ts",
         "coverage:ci": "CI=true SOLIDITY_COVERAGE=true scripts/test.sh",
