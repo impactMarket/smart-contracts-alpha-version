@@ -83,6 +83,10 @@ contract ImpactMarket is AccessControl {
         emit CommunityRemoved(_community);
     }
 
+    // function migrateCommunity(address _previousCommunity) public onlyAdmin {
+    //     // TODO: to implement!
+    // }
+
     function addAdmin(address _account) public onlyAdmin {
         grantRole(ADMIN_ROLE, _account);
     }

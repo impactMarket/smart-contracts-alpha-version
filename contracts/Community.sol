@@ -27,7 +27,8 @@ contract Community is AccessControl {
     uint256 public incIntervalTime;
     uint256 public claimHardCap;
 
-    address private cUSDAddress;
+    address public cUSDAddress;
+    bool public locked;
 
     event CoordinatorAdded(address indexed _account);
     event CoordinatorRemoved(address indexed _account);
@@ -36,6 +37,15 @@ contract Community is AccessControl {
     event BeneficiaryUnlocked(address indexed _account);
     event BeneficiaryRemoved(address indexed _account);
     event BeneficiaryClaim(address indexed _account, uint256 _amount);
+    event CommunityEdited(
+        address indexed _cUSD,
+        uint256 _amountByClaim,
+        uint256 _baseIntervalTime,
+        uint256 _incIntervalTime,
+        uint256 _claimHardCap
+    );
+    event CommunityLocked(address indexed _by);
+    event CommunityUnlocked(address indexed _by);
 
     /**
      * @dev Constructor with custom fields, choosen by the community.
@@ -68,6 +78,7 @@ contract Community is AccessControl {
         claimHardCap = _claimHardCap;
 
         cUSDAddress = _cUSDAddress;
+        locked = false;
     }
 
     modifier onlyValidBeneficiary() {
@@ -88,6 +99,7 @@ contract Community is AccessControl {
         _;
     }
 
+    // TODO: remove
     function isCoordinator(address _account) public view returns (bool) {
         return hasRole(COORDINATOR_ROLE, _account);
     }
@@ -148,6 +160,7 @@ contract Community is AccessControl {
      * @dev Allow beneficiaries to claim.
      */
     function claim() public onlyValidBeneficiary {
+        require(!locked, "LOCKED");
         require(cooldown[msg.sender] <= block.timestamp, "NOT_YET");
         require(
             (claimed[msg.sender] + amountByClaim) <= claimHardCap,
@@ -160,5 +173,58 @@ contract Community is AccessControl {
             block.timestamp + lastInterval[msg.sender]
         );
         emit BeneficiaryClaim(msg.sender, amountByClaim);
+    }
+
+    /**
+     * @dev Allow community managers to edit community variables.
+     */
+    function edit(
+        uint256 _amountByClaim,
+        uint256 _baseIntervalTime,
+        uint256 _incIntervalTime,
+        uint256 _claimHardCap,
+        address _cUSDAddress
+    ) public onlyCoordinators {
+        require(_baseIntervalTime > _incIntervalTime, "");
+        require(_claimHardCap > _amountByClaim, "");
+
+        amountByClaim = _amountByClaim;
+        baseIntervalTime = _baseIntervalTime;
+        incIntervalTime = _incIntervalTime;
+        claimHardCap = _claimHardCap;
+
+        cUSDAddress = _cUSDAddress;
+        emit CommunityEdited(
+            _cUSDAddress,
+            _amountByClaim,
+            _baseIntervalTime,
+            _incIntervalTime,
+            _claimHardCap
+        );
+    }
+
+    /**
+     * Allow community managers to lock community claims.
+     */
+    function lock() public onlyCoordinators {
+        locked = true;
+        emit CommunityLocked(msg.sender);
+    }
+
+    /**
+     * Allow community managers to unlock community claims.
+     */
+    function unlock() public onlyCoordinators {
+        locked = false;
+        emit CommunityUnlocked(msg.sender);
+    }
+
+    /**
+     * Migrate funds in current community to new one (temporary version).
+     */
+    function migrateFunds(address _newCommunity) public onlyCoordinators {
+        // TODO: planning
+        uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
+        IERC20(cUSDAddress).transfer(_newCommunity, balance);
     }
 }
