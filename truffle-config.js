@@ -51,7 +51,13 @@ module.exports = {
     // Set default mocha options here, use special reporters etc.
     mocha: {
         timeout: 100000,
-        reporter: 'eth-gas-reporter'
+        reporter: 'eth-gas-reporter',
+        reporterOptions: {
+            excludeContracts: [
+                'cUSD',
+                'Migrations'
+            ]
+        }
     },
 
     plugins: ['solidity-coverage'],
@@ -60,6 +66,12 @@ module.exports = {
     compilers: {
         solc: {
             version: '0.6.5', // Fetch exact version from solc-bin (default: truffle's version)
+            settings: { // See the solidity docs for advice about optimization and evmVersion
+                optimizer: {
+                    enabled: true,
+                    runs: 200,
+                },
+            },
         },
     },
 };
