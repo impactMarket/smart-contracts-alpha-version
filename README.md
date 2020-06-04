@@ -37,7 +37,13 @@ Deploy with `npx truffle deploy --network development`.
 - [x] Deploy smart contracts to alfajores testnet
 - [x] Refactor smart contracts (integrate with tokens, etc)
 - [x] Deploy to alfajores testnet, integrating with cUSD
+- [ ] Create a community migration system (WIP) (requires detailed specification)
 - [ ] ...
+
+## Useful tools and links
+* https://github.com/celo-org/celo-blockchain/blob/master/params/protocol_params.go
+* https://alfajores-blockscout.celo-testnet.org/
+* https://explorer.bitquery.io/celo_alfajores
 
 ## License
 [Apache-2.0](LICENSE)
