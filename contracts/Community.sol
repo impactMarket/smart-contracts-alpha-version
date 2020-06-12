@@ -4,7 +4,6 @@ pragma solidity ^0.6.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-
 /**
  * @notice Welcome to the Community contract. For each community
  * there will be one contract like this being deployed by
@@ -100,14 +99,14 @@ contract Community is AccessControl {
     }
 
     // TODO: remove
-    function isCoordinator(address _account) public view returns (bool) {
+    function isCoordinator(address _account) external view returns (bool) {
         return hasRole(COORDINATOR_ROLE, _account);
     }
 
     /**
      * @dev Allow community coordinators to add other coordinators.
      */
-    function addCoordinator(address _account) public onlyCoordinators {
+    function addCoordinator(address _account) external onlyCoordinators {
         grantRole(COORDINATOR_ROLE, _account);
         emit CoordinatorAdded(_account);
     }
@@ -115,7 +114,7 @@ contract Community is AccessControl {
     /**
      * @dev Allow community coordinators to remove other coordinators.
      */
-    function removeCoordinator(address _account) public onlyCoordinators {
+    function removeCoordinator(address _account) external onlyCoordinators {
         revokeRole(COORDINATOR_ROLE, _account);
         emit CoordinatorRemoved(_account);
     }
@@ -123,7 +122,7 @@ contract Community is AccessControl {
     /**
      * @dev Allow community coordinators to add beneficiaries.
      */
-    function addBeneficiary(address _account) public onlyCoordinators {
+    function addBeneficiary(address _account) external onlyCoordinators {
         beneficiaries[_account] = BeneficiaryState.Valid;
         cooldown[_account] = block.timestamp;
         lastInterval[_account] = uint256(baseIntervalTime - incIntervalTime);
@@ -133,7 +132,7 @@ contract Community is AccessControl {
     /**
      * @dev Allow community coordinators to lock beneficiaries.
      */
-    function lockBeneficiary(address _account) public onlyCoordinators {
+    function lockBeneficiary(address _account) external onlyCoordinators {
         require(beneficiaries[_account] == BeneficiaryState.Valid, "NOT_YET");
         beneficiaries[_account] = BeneficiaryState.Locked;
         emit BeneficiaryLocked(_account);
@@ -142,7 +141,7 @@ contract Community is AccessControl {
     /**
      * @dev Allow community coordinators to unlock locked beneficiaries.
      */
-    function unlockBeneficiary(address _account) public onlyCoordinators {
+    function unlockBeneficiary(address _account) external onlyCoordinators {
         require(beneficiaries[_account] == BeneficiaryState.Locked, "NOT_YET");
         beneficiaries[_account] = BeneficiaryState.Valid;
         emit BeneficiaryUnlocked(_account);
@@ -151,7 +150,7 @@ contract Community is AccessControl {
     /**
      * @dev Allow community coordinators to add beneficiaries.
      */
-    function removeBeneficiary(address _account) public onlyCoordinators {
+    function removeBeneficiary(address _account) external onlyCoordinators {
         beneficiaries[_account] = BeneficiaryState.Removed;
         emit BeneficiaryRemoved(_account);
     }
@@ -159,20 +158,21 @@ contract Community is AccessControl {
     /**
      * @dev Allow beneficiaries to claim.
      */
-    function claim() public onlyValidBeneficiary {
+    function claim() external onlyValidBeneficiary {
         require(!locked, "LOCKED");
         require(cooldown[msg.sender] <= block.timestamp, "NOT_YET");
         require(
             (claimed[msg.sender] + amountByClaim) <= claimHardCap,
             "MAX_CLAIM"
         );
-        IERC20(cUSDAddress).transfer(msg.sender, amountByClaim);
         claimed[msg.sender] = claimed[msg.sender] + amountByClaim;
         lastInterval[msg.sender] = lastInterval[msg.sender] + incIntervalTime;
         cooldown[msg.sender] = uint256(
             block.timestamp + lastInterval[msg.sender]
         );
         emit BeneficiaryClaim(msg.sender, amountByClaim);
+        bool success = IERC20(cUSDAddress).transfer(msg.sender, amountByClaim);
+        require(success, "");
     }
 
     /**
@@ -184,7 +184,7 @@ contract Community is AccessControl {
         uint256 _incIntervalTime,
         uint256 _claimHardCap,
         address _cUSDAddress
-    ) public onlyCoordinators {
+    ) external onlyCoordinators {
         require(_baseIntervalTime > _incIntervalTime, "");
         require(_claimHardCap > _amountByClaim, "");
 
@@ -206,7 +206,7 @@ contract Community is AccessControl {
     /**
      * Allow community managers to lock community claims.
      */
-    function lock() public onlyCoordinators {
+    function lock() external onlyCoordinators {
         locked = true;
         emit CommunityLocked(msg.sender);
     }
@@ -214,7 +214,7 @@ contract Community is AccessControl {
     /**
      * Allow community managers to unlock community claims.
      */
-    function unlock() public onlyCoordinators {
+    function unlock() external onlyCoordinators {
         locked = false;
         emit CommunityUnlocked(msg.sender);
     }
@@ -222,9 +222,10 @@ contract Community is AccessControl {
     /**
      * Migrate funds in current community to new one (temporary version).
      */
-    function migrateFunds(address _newCommunity) public onlyCoordinators {
+    function migrateFunds(address _newCommunity) external onlyCoordinators {
         // TODO: planning
         uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
-        IERC20(cUSDAddress).transfer(_newCommunity, balance);
+        bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);
+        require(success, "");
     }
 }

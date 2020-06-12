@@ -55,7 +55,7 @@ contract ImpactMarket is AccessControl {
         uint256 _baseIntervalTime,
         uint256 _incIntervalTime,
         uint256 _claimHardCap
-    ) public onlyAdmin {
+    ) external onlyAdmin {
         Community community = new Community(
             _firstCoordinator,
             _amountByClaim,
@@ -78,7 +78,7 @@ contract ImpactMarket is AccessControl {
     /**
      * @dev Remove an existing community. Can be used only by an admin.
      */
-    function removeCommunity(address _community) public onlyAdmin {
+    function removeCommunity(address _community) external onlyAdmin {
         communities[_community] = false;
         emit CommunityRemoved(_community);
     }
@@ -87,11 +87,11 @@ contract ImpactMarket is AccessControl {
     //     // TODO: to implement!
     // }
 
-    function addAdmin(address _account) public onlyAdmin {
+    function addAdmin(address _account) external onlyAdmin {
         grantRole(ADMIN_ROLE, _account);
     }
 
-    function removeAdmin(address _account) public onlyAdmin {
+    function removeAdmin(address _account) external onlyAdmin {
         revokeRole(ADMIN_ROLE, _account);
     }
 
