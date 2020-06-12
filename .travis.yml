@@ -2,18 +2,19 @@ os: linux
 dist: xenial
 language: node_js
 node_js: lts/dubnium
-install: yarn
 jobs:
   include:
-    - script:
+    - install: yarn
+      script:
         - yarn test:ci
         - npx codechecks
 
-    - script:
+    - install: yarn
+      script:
         - yarn coverage:ci
 
     - language: python
       python: 3.6
       before_install: pip3 install slither-analyzer
       script:
-        - yarn security
+        - slither . --filter-paths "@openzeppelin" --truffle-version truffle@5.1.29
