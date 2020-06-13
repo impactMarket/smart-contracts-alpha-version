@@ -13,7 +13,7 @@
         "coverage:ci": "CI=true SOLIDITY_COVERAGE=true scripts/test.sh",
         "generate-ts": "truffle compile && typechain --target truffle --outDir types/truffle-contracts './build/contracts/*.json'",
         "lint:ts": "eslint \"test/**/*.ts\"",
-        "security": "slither . --filter-paths \"@openzeppelin\" --truffle-version truffle@5.1.29"
+        "security": "slither . --filter-paths \"@openzeppelin|test|Migrations.sol\" --truffle-version truffle@5.1.29 --exclude-informational --exclude-low"
     },
     "repository": {
         "type": "git",

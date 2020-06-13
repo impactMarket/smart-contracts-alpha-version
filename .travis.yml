@@ -21,4 +21,4 @@ jobs:
       install:
         - npm install
       script:
-        - slither . --filter-paths "@openzeppelin" --truffle-version truffle@5.1.29
+        - slither . --filter-paths "@openzeppelin|test|Migrations.sol" --truffle-version truffle@5.1.29 --exclude-informational --exclude-low
