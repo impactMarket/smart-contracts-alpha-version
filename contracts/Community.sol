@@ -10,10 +10,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * ImpactMarket contract. This enable us to save tokens on the
  * contract itself, and avoid the problems of having everything
  * in one single contract. Each community has it's own members and
- * and coordinators.
+ * and managers.
  */
 contract Community is AccessControl {
-    bytes32 public constant COORDINATOR_ROLE = keccak256("COORDINATOR_ROLE");
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
     enum BeneficiaryState {NONE, Valid, Locked, Removed} // starts by 0 (when user is not added yet)
 
     mapping(address => uint256) public cooldown;
@@ -29,8 +29,8 @@ contract Community is AccessControl {
     address public cUSDAddress;
     bool public locked;
 
-    event CoordinatorAdded(address indexed _account);
-    event CoordinatorRemoved(address indexed _account);
+    event ManagerAdded(address indexed _account);
+    event ManagerRemoved(address indexed _account);
     event BeneficiaryAdded(address indexed _account);
     event BeneficiaryLocked(address indexed _account);
     event BeneficiaryUnlocked(address indexed _account);
@@ -48,7 +48,7 @@ contract Community is AccessControl {
 
     /**
      * @dev Constructor with custom fields, choosen by the community.
-     * @param _firstCoordinator Comminuty's first coordinator. Will
+     * @param _firstManager Comminuty's first manager. Will
      * be able to add others.
      * @param _amountByClaim Base amount to be claim by the benificiary.
      * @param _baseIntervalTime Base interval to start claiming.
@@ -57,7 +57,7 @@ contract Community is AccessControl {
      * @param _cUSDAddress cUSD smart contract address.
      */
     constructor(
-        address _firstCoordinator,
+        address _firstManager,
         uint256 _amountByClaim,
         uint256 _baseIntervalTime,
         uint256 _incIntervalTime,
@@ -67,9 +67,9 @@ contract Community is AccessControl {
         require(_baseIntervalTime > _incIntervalTime, "");
         require(_claimHardCap > _amountByClaim, "");
 
-        _setupRole(COORDINATOR_ROLE, _firstCoordinator);
-        _setRoleAdmin(COORDINATOR_ROLE, COORDINATOR_ROLE);
-        emit CoordinatorAdded(_firstCoordinator);
+        _setupRole(MANAGER_ROLE, _firstManager);
+        _setRoleAdmin(MANAGER_ROLE, MANAGER_ROLE);
+        emit ManagerAdded(_firstManager);
 
         amountByClaim = _amountByClaim;
         baseIntervalTime = _baseIntervalTime;
@@ -93,36 +93,36 @@ contract Community is AccessControl {
         _;
     }
 
-    modifier onlyCoordinators() {
-        require(hasRole(COORDINATOR_ROLE, msg.sender), "NOT_COORDINATOR");
+    modifier onlyManagers() {
+        require(hasRole(MANAGER_ROLE, msg.sender), "NOT_MANAGER");
         _;
     }
 
     // TODO: remove
-    function isCoordinator(address _account) external view returns (bool) {
-        return hasRole(COORDINATOR_ROLE, _account);
+    function isManager(address _account) external view returns (bool) {
+        return hasRole(MANAGER_ROLE, _account);
     }
 
     /**
-     * @dev Allow community coordinators to add other coordinators.
+     * @dev Allow community managers to add other managers.
      */
-    function addCoordinator(address _account) external onlyCoordinators {
-        grantRole(COORDINATOR_ROLE, _account);
-        emit CoordinatorAdded(_account);
+    function addManager(address _account) external onlyManagers {
+        grantRole(MANAGER_ROLE, _account);
+        emit ManagerAdded(_account);
     }
 
     /**
-     * @dev Allow community coordinators to remove other coordinators.
+     * @dev Allow community managers to remove other managers.
      */
-    function removeCoordinator(address _account) external onlyCoordinators {
-        revokeRole(COORDINATOR_ROLE, _account);
-        emit CoordinatorRemoved(_account);
+    function removeManager(address _account) external onlyManagers {
+        revokeRole(MANAGER_ROLE, _account);
+        emit ManagerRemoved(_account);
     }
 
     /**
-     * @dev Allow community coordinators to add beneficiaries.
+     * @dev Allow community managers to add beneficiaries.
      */
-    function addBeneficiary(address _account) external onlyCoordinators {
+    function addBeneficiary(address _account) external onlyManagers {
         beneficiaries[_account] = BeneficiaryState.Valid;
         cooldown[_account] = block.timestamp;
         lastInterval[_account] = uint256(baseIntervalTime - incIntervalTime);
@@ -130,27 +130,27 @@ contract Community is AccessControl {
     }
 
     /**
-     * @dev Allow community coordinators to lock beneficiaries.
+     * @dev Allow community managers to lock beneficiaries.
      */
-    function lockBeneficiary(address _account) external onlyCoordinators {
+    function lockBeneficiary(address _account) external onlyManagers {
         require(beneficiaries[_account] == BeneficiaryState.Valid, "NOT_YET");
         beneficiaries[_account] = BeneficiaryState.Locked;
         emit BeneficiaryLocked(_account);
     }
 
     /**
-     * @dev Allow community coordinators to unlock locked beneficiaries.
+     * @dev Allow community managers to unlock locked beneficiaries.
      */
-    function unlockBeneficiary(address _account) external onlyCoordinators {
+    function unlockBeneficiary(address _account) external onlyManagers {
         require(beneficiaries[_account] == BeneficiaryState.Locked, "NOT_YET");
         beneficiaries[_account] = BeneficiaryState.Valid;
         emit BeneficiaryUnlocked(_account);
     }
 
     /**
-     * @dev Allow community coordinators to add beneficiaries.
+     * @dev Allow community managers to add beneficiaries.
      */
-    function removeBeneficiary(address _account) external onlyCoordinators {
+    function removeBeneficiary(address _account) external onlyManagers {
         beneficiaries[_account] = BeneficiaryState.Removed;
         emit BeneficiaryRemoved(_account);
     }
@@ -184,7 +184,7 @@ contract Community is AccessControl {
         uint256 _incIntervalTime,
         uint256 _claimHardCap,
         address _cUSDAddress
-    ) external onlyCoordinators {
+    ) external onlyManagers {
         require(_baseIntervalTime > _incIntervalTime, "");
         require(_claimHardCap > _amountByClaim, "");
 
@@ -206,7 +206,7 @@ contract Community is AccessControl {
     /**
      * Allow community managers to lock community claims.
      */
-    function lock() external onlyCoordinators {
+    function lock() external onlyManagers {
         locked = true;
         emit CommunityLocked(msg.sender);
     }
@@ -214,7 +214,7 @@ contract Community is AccessControl {
     /**
      * Allow community managers to unlock community claims.
      */
-    function unlock() external onlyCoordinators {
+    function unlock() external onlyManagers {
         locked = false;
         emit CommunityUnlocked(msg.sender);
     }
@@ -222,7 +222,7 @@ contract Community is AccessControl {
     /**
      * Migrate funds in current community to new one (temporary version).
      */
-    function migrateFunds(address _newCommunity) external onlyCoordinators {
+    function migrateFunds(address _newCommunity) external onlyManagers {
         // TODO: planning
         uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
         bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);

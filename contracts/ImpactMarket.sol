@@ -19,7 +19,7 @@ contract ImpactMarket is AccessControl {
 
     event CommunityAdded(
         address indexed _addr,
-        address indexed _firstCoordinator,
+        address indexed _firstManager,
         uint256 _amountByClaim,
         uint256 _baseIntervalTime,
         uint256 _incIntervalTime,
@@ -50,14 +50,14 @@ contract ImpactMarket is AccessControl {
      * *Community* smart contract constructor.
      */
     function addCommunity(
-        address _firstCoordinator,
+        address _firstManager,
         uint256 _amountByClaim,
         uint256 _baseIntervalTime,
         uint256 _incIntervalTime,
         uint256 _claimHardCap
     ) external onlyAdmin {
         Community community = new Community(
-            _firstCoordinator,
+            _firstManager,
             _amountByClaim,
             _baseIntervalTime,
             _incIntervalTime,
@@ -67,7 +67,7 @@ contract ImpactMarket is AccessControl {
         communities[address(community)] = true;
         emit CommunityAdded(
             address(community),
-            _firstCoordinator,
+            _firstManager,
             _amountByClaim,
             _baseIntervalTime,
             _incIntervalTime,

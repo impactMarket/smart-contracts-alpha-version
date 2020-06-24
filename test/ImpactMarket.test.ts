@@ -223,7 +223,7 @@ contract('ImpactMarket', async (accounts) => {
             communityInstance = await Community.at(communityManagerAddress);
         });
 
-        it('should be able to migrate funds from community if coordinator', async () => {
+        it('should be able to migrate funds from community if manager', async () => {
             const newTx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
@@ -236,7 +236,7 @@ contract('ImpactMarket', async (accounts) => {
             await communityInstance.migrateFunds(newCommunityAddress, { from: communityManagerA });
         });
 
-        it('should be able edit community if coordinator', async () => {
+        it('should be able edit community if manager', async () => {
             (await communityInstance.incIntervalTime()).toString().should.be.equal(hour.toString());
             await communityInstance.edit(
                 claimAmountTwo,
@@ -249,7 +249,7 @@ contract('ImpactMarket', async (accounts) => {
             (await communityInstance.incIntervalTime()).toString().should.be.equal(day.toString());
         });
 
-        it('should not be able edit community if not coordinator', async () => {
+        it('should not be able edit community if not manager', async () => {
             await expectRevert(
                 communityInstance.edit(
                     claimAmountTwo,
@@ -259,7 +259,7 @@ contract('ImpactMarket', async (accounts) => {
                     cUSDInstance.address,
                     { from: communityManagerB }
                 ),
-                "NOT_COORDINATOR"
+                "NOT_MANAGER"
             );
         });
 
@@ -286,46 +286,46 @@ contract('ImpactMarket', async (accounts) => {
             );
         });
 
-        it('should not be able to add coordinator to community if not coordinator', async () => {
+        it('should not be able to add manager to community if not manager', async () => {
             await expectRevert(
-                communityInstance.addCoordinator(communityManagerB, { from: communityManagerC }),
-                "NOT_COORDINATOR"
+                communityInstance.addManager(communityManagerB, { from: communityManagerC }),
+                "NOT_MANAGER"
             );
         });
 
-        it('should not be able to remove coordinator from community if not coordinator', async () => {
-            await communityInstance.addCoordinator(communityManagerB, { from: communityManagerA });
+        it('should not be able to remove manager from community if not manager', async () => {
+            await communityInstance.addManager(communityManagerB, { from: communityManagerA });
             await expectRevert(
-                communityInstance.removeCoordinator(communityManagerB, { from: communityManagerC }),
-                "NOT_COORDINATOR"
+                communityInstance.removeManager(communityManagerB, { from: communityManagerC }),
+                "NOT_MANAGER"
             );
         });
 
-        it('should be able to add coordinator to community if coordinator', async () => {
-            await communityInstance.addCoordinator(communityManagerB, { from: communityManagerA });
+        it('should be able to add manager to community if manager', async () => {
+            await communityInstance.addManager(communityManagerB, { from: communityManagerA });
         });
 
-        it('should be able to remove coordinator to community if coordinator', async () => {
-            await communityInstance.addCoordinator(communityManagerB, { from: communityManagerA });
-            await communityInstance.removeCoordinator(communityManagerB, { from: communityManagerA });
+        it('should be able to remove manager to community if manager', async () => {
+            await communityInstance.addManager(communityManagerB, { from: communityManagerA });
+            await communityInstance.removeManager(communityManagerB, { from: communityManagerA });
         });
 
-        it('should be able to renounce from coordinator of community if coordinator', async () => {
-            await communityInstance.addCoordinator(communityManagerB, { from: communityManagerA });
+        it('should be able to renounce from manager of community if manager', async () => {
+            await communityInstance.addManager(communityManagerB, { from: communityManagerA });
             await communityInstance.renounceRole(
-                await communityInstance.COORDINATOR_ROLE(),
+                await communityInstance.MANAGER_ROLE(),
                 communityManagerB, { from: communityManagerB }
             );
         });
 
-        it('should be able to lock community if coordinator', async () => {
+        it('should be able to lock community if manager', async () => {
             const receipt = await communityInstance.lock({ from: communityManagerA });
             expectEvent(receipt, 'CommunityLocked', {
                 _by: communityManagerA,
             });
         });
 
-        it('should be able to lock community if coordinator', async () => {
+        it('should be able to lock community if manager', async () => {
             let receipt = await communityInstance.lock({ from: communityManagerA });
             expectEvent(receipt, 'CommunityLocked', {
                 _by: communityManagerA,
