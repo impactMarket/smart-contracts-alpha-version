@@ -26,6 +26,7 @@ contract Community is AccessControl {
     uint256 public incrementInterval;
     uint256 public maxClaim;
 
+    address public previousCommunityContract;
     address public cUSDAddress;
     bool public locked;
 
@@ -53,6 +54,7 @@ contract Community is AccessControl {
      * @param _maxClaim Limit that a beneficiary can claim at once.
      * @param _baseInterval Base interval to start claiming.
      * @param _incrementInterval Increment interval used in each claim.
+     * @param _previousCommunityContract previous smart contract address of community.
      * @param _cUSDAddress cUSD smart contract address.
      */
     constructor(
@@ -61,6 +63,7 @@ contract Community is AccessControl {
         uint256 _maxClaim,
         uint256 _baseInterval,
         uint256 _incrementInterval,
+        address _previousCommunityContract,
         address _cUSDAddress
     ) public {
         require(_baseInterval > _incrementInterval, "");
@@ -75,6 +78,7 @@ contract Community is AccessControl {
         incrementInterval = _incrementInterval;
         maxClaim = _maxClaim;
 
+        previousCommunityContract = _previousCommunityContract;
         cUSDAddress = _cUSDAddress;
         locked = false;
     }
@@ -95,11 +99,6 @@ contract Community is AccessControl {
     modifier onlyManagers() {
         require(hasRole(MANAGER_ROLE, msg.sender), "NOT_MANAGER");
         _;
-    }
-
-    // TODO: remove
-    function isManager(address _account) external view returns (bool) {
-        return hasRole(MANAGER_ROLE, _account);
     }
 
     /**
@@ -160,10 +159,7 @@ contract Community is AccessControl {
     function claim() external onlyValidBeneficiary {
         require(!locked, "LOCKED");
         require(cooldown[msg.sender] <= block.timestamp, "NOT_YET");
-        require(
-            (claimed[msg.sender] + claimAmount) <= maxClaim,
-            "MAX_CLAIM"
-        );
+        require((claimed[msg.sender] + claimAmount) <= maxClaim, "MAX_CLAIM");
         claimed[msg.sender] = claimed[msg.sender] + claimAmount;
         lastInterval[msg.sender] = lastInterval[msg.sender] + incrementInterval;
         cooldown[msg.sender] = uint256(

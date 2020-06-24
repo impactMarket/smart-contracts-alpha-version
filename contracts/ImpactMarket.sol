@@ -2,8 +2,9 @@
 pragma solidity ^0.6.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./interfaces/ICommunity.sol";
+import "./interfaces/ICommunityFactory.sol";
 import "./Community.sol";
-
 
 /**
  * @notice Welcome to ImpactMarket, the main contract. This is an
@@ -11,11 +12,13 @@ import "./Community.sol";
  * over the list of communities. Being only able to add and
  * remoev communities
  */
+// TODO: implementr interface
 contract ImpactMarket is AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     mapping(address => bool) public communities;
     address private cUSDAddress;
+    address private communityFactory;
 
     event CommunityAdded(
         address indexed _communityAddress,
@@ -23,20 +26,27 @@ contract ImpactMarket is AccessControl {
         uint256 _claimAmount,
         uint256 _maxClaim,
         uint256 _baseInterval,
-        uint256 _incrementalInterval
+        uint256 _incrementInterval
     );
     event CommunityRemoved(address indexed _communityAddress);
+    event CommunityMigrated(
+        address indexed _firstManager,
+        address indexed _communityAddress,
+        address indexed _previousCommunityAddress
+    );
 
     /**
      * @dev Constructor only with the cUSD contract address. It
      * also sets the first admin, which later can add others
      * and add/remove communities.
+     * @param _communityFactory Community Factory address.
      * @param _cUSDAddress cUSD smart contract address.
      */
-    constructor(address _cUSDAddress) public {
+    constructor(address _communityFactory, address _cUSDAddress) public {
         _setupRole(ADMIN_ROLE, msg.sender);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         cUSDAddress = _cUSDAddress;
+        communityFactory = _communityFactory;
     }
 
     modifier onlyAdmin() {
@@ -54,24 +64,46 @@ contract ImpactMarket is AccessControl {
         uint256 _claimAmount,
         uint256 _maxClaim,
         uint256 _baseInterval,
-        uint256 _incrementalInterval
+        uint256 _incrementInterval
     ) external onlyAdmin {
-        Community community = new Community(
+        address community = ICommunityFactory(communityFactory).deployCommunity(
             _firstManager,
             _claimAmount,
             _maxClaim,
             _baseInterval,
-            _incrementalInterval,
-            cUSDAddress
+            _incrementInterval,
+            address(0)
         );
-        communities[address(community)] = true;
+        communities[community] = true;
         emit CommunityAdded(
-            address(community),
+            community,
             _firstManager,
             _claimAmount,
             _maxClaim,
             _baseInterval,
-            _incrementalInterval
+            _incrementInterval
+        );
+    }
+
+    function migrateCommunity(
+        address _firstManager,
+        address _previousCommunityAddress
+    ) external onlyAdmin {
+        ICommunity previousCommunity = ICommunity(_previousCommunityAddress);
+        address community = ICommunityFactory(communityFactory).deployCommunity(
+            _firstManager,
+            previousCommunity.claimAmount(),
+            previousCommunity.maxClaim(),
+            previousCommunity.baseInterval(),
+            previousCommunity.incrementInterval(),
+            _previousCommunityAddress
+        );
+        communities[_previousCommunityAddress] = false;
+        communities[community] = true;
+        emit CommunityMigrated(
+            _firstManager,
+            community,
+            _previousCommunityAddress
         );
     }
 
