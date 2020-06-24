@@ -18,14 +18,14 @@ contract ImpactMarket is AccessControl {
     address private cUSDAddress;
 
     event CommunityAdded(
-        address indexed _addr,
+        address indexed _communityAddress,
         address indexed _firstManager,
-        uint256 _amountByClaim,
-        uint256 _baseIntervalTime,
-        uint256 _incIntervalTime,
-        uint256 _claimHardCap
+        uint256 _claimAmount,
+        uint256 _maxClaim,
+        uint256 _baseInterval,
+        uint256 _incrementalInterval
     );
-    event CommunityRemoved(address indexed _addr);
+    event CommunityRemoved(address indexed _communityAddress);
 
     /**
      * @dev Constructor only with the cUSD contract address. It
@@ -51,27 +51,27 @@ contract ImpactMarket is AccessControl {
      */
     function addCommunity(
         address _firstManager,
-        uint256 _amountByClaim,
-        uint256 _baseIntervalTime,
-        uint256 _incIntervalTime,
-        uint256 _claimHardCap
+        uint256 _claimAmount,
+        uint256 _maxClaim,
+        uint256 _baseInterval,
+        uint256 _incrementalInterval
     ) external onlyAdmin {
         Community community = new Community(
             _firstManager,
-            _amountByClaim,
-            _baseIntervalTime,
-            _incIntervalTime,
-            _claimHardCap,
+            _claimAmount,
+            _maxClaim,
+            _baseInterval,
+            _incrementalInterval,
             cUSDAddress
         );
         communities[address(community)] = true;
         emit CommunityAdded(
             address(community),
             _firstManager,
-            _amountByClaim,
-            _baseIntervalTime,
-            _incIntervalTime,
-            _claimHardCap
+            _claimAmount,
+            _maxClaim,
+            _baseInterval,
+            _incrementalInterval
         );
     }
 

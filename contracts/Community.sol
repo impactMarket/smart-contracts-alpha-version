@@ -21,10 +21,10 @@ contract Community is AccessControl {
     mapping(address => uint256) public claimed;
     mapping(address => BeneficiaryState) public beneficiaries;
 
-    uint256 public amountByClaim;
-    uint256 public baseIntervalTime;
-    uint256 public incIntervalTime;
-    uint256 public claimHardCap;
+    uint256 public claimAmount;
+    uint256 public baseInterval;
+    uint256 public incrementInterval;
+    uint256 public maxClaim;
 
     address public cUSDAddress;
     bool public locked;
@@ -37,11 +37,10 @@ contract Community is AccessControl {
     event BeneficiaryRemoved(address indexed _account);
     event BeneficiaryClaim(address indexed _account, uint256 _amount);
     event CommunityEdited(
-        address indexed _cUSD,
-        uint256 _amountByClaim,
-        uint256 _baseIntervalTime,
-        uint256 _incIntervalTime,
-        uint256 _claimHardCap
+        uint256 _claimAmount,
+        uint256 _maxClaim,
+        uint256 _baseInterval,
+        uint256 _incrementInterval
     );
     event CommunityLocked(address indexed _by);
     event CommunityUnlocked(address indexed _by);
@@ -50,31 +49,31 @@ contract Community is AccessControl {
      * @dev Constructor with custom fields, choosen by the community.
      * @param _firstManager Comminuty's first manager. Will
      * be able to add others.
-     * @param _amountByClaim Base amount to be claim by the benificiary.
-     * @param _baseIntervalTime Base interval to start claiming.
-     * @param _incIntervalTime Increment interval used in each claim.
-     * @param _claimHardCap Limit that a beneficiary can claim at once.
+     * @param _claimAmount Base amount to be claim by the benificiary.
+     * @param _maxClaim Limit that a beneficiary can claim at once.
+     * @param _baseInterval Base interval to start claiming.
+     * @param _incrementInterval Increment interval used in each claim.
      * @param _cUSDAddress cUSD smart contract address.
      */
     constructor(
         address _firstManager,
-        uint256 _amountByClaim,
-        uint256 _baseIntervalTime,
-        uint256 _incIntervalTime,
-        uint256 _claimHardCap,
+        uint256 _claimAmount,
+        uint256 _maxClaim,
+        uint256 _baseInterval,
+        uint256 _incrementInterval,
         address _cUSDAddress
     ) public {
-        require(_baseIntervalTime > _incIntervalTime, "");
-        require(_claimHardCap > _amountByClaim, "");
+        require(_baseInterval > _incrementInterval, "");
+        require(_maxClaim > _claimAmount, "");
 
         _setupRole(MANAGER_ROLE, _firstManager);
         _setRoleAdmin(MANAGER_ROLE, MANAGER_ROLE);
         emit ManagerAdded(_firstManager);
 
-        amountByClaim = _amountByClaim;
-        baseIntervalTime = _baseIntervalTime;
-        incIntervalTime = _incIntervalTime;
-        claimHardCap = _claimHardCap;
+        claimAmount = _claimAmount;
+        baseInterval = _baseInterval;
+        incrementInterval = _incrementInterval;
+        maxClaim = _maxClaim;
 
         cUSDAddress = _cUSDAddress;
         locked = false;
@@ -125,7 +124,7 @@ contract Community is AccessControl {
     function addBeneficiary(address _account) external onlyManagers {
         beneficiaries[_account] = BeneficiaryState.Valid;
         cooldown[_account] = block.timestamp;
-        lastInterval[_account] = uint256(baseIntervalTime - incIntervalTime);
+        lastInterval[_account] = uint256(baseInterval - incrementInterval);
         emit BeneficiaryAdded(_account);
     }
 
@@ -162,16 +161,16 @@ contract Community is AccessControl {
         require(!locked, "LOCKED");
         require(cooldown[msg.sender] <= block.timestamp, "NOT_YET");
         require(
-            (claimed[msg.sender] + amountByClaim) <= claimHardCap,
+            (claimed[msg.sender] + claimAmount) <= maxClaim,
             "MAX_CLAIM"
         );
-        claimed[msg.sender] = claimed[msg.sender] + amountByClaim;
-        lastInterval[msg.sender] = lastInterval[msg.sender] + incIntervalTime;
+        claimed[msg.sender] = claimed[msg.sender] + claimAmount;
+        lastInterval[msg.sender] = lastInterval[msg.sender] + incrementInterval;
         cooldown[msg.sender] = uint256(
             block.timestamp + lastInterval[msg.sender]
         );
-        emit BeneficiaryClaim(msg.sender, amountByClaim);
-        bool success = IERC20(cUSDAddress).transfer(msg.sender, amountByClaim);
+        emit BeneficiaryClaim(msg.sender, claimAmount);
+        bool success = IERC20(cUSDAddress).transfer(msg.sender, claimAmount);
         require(success, "");
     }
 
@@ -179,27 +178,24 @@ contract Community is AccessControl {
      * @dev Allow community managers to edit community variables.
      */
     function edit(
-        uint256 _amountByClaim,
-        uint256 _baseIntervalTime,
-        uint256 _incIntervalTime,
-        uint256 _claimHardCap,
-        address _cUSDAddress
+        uint256 _claimAmount,
+        uint256 _maxClaim,
+        uint256 _baseInterval,
+        uint256 _incrementInterval
     ) external onlyManagers {
-        require(_baseIntervalTime > _incIntervalTime, "");
-        require(_claimHardCap > _amountByClaim, "");
+        require(_baseInterval > _incrementInterval, "");
+        require(_maxClaim > _claimAmount, "");
 
-        amountByClaim = _amountByClaim;
-        baseIntervalTime = _baseIntervalTime;
-        incIntervalTime = _incIntervalTime;
-        claimHardCap = _claimHardCap;
+        claimAmount = _claimAmount;
+        baseInterval = _baseInterval;
+        incrementInterval = _incrementInterval;
+        maxClaim = _maxClaim;
 
-        cUSDAddress = _cUSDAddress;
         emit CommunityEdited(
-            _cUSDAddress,
-            _amountByClaim,
-            _baseIntervalTime,
-            _incIntervalTime,
-            _claimHardCap
+            _claimAmount,
+            _maxClaim,
+            _baseInterval,
+            _incrementInterval
         );
     }
 
@@ -224,6 +220,9 @@ contract Community is AccessControl {
      */
     function migrateFunds(address _newCommunity) external onlyManagers {
         // TODO: planning
+        // to migrate, there must have a new version
+        // next community must have the current address as previousCommunity
+        // an event MigratedCommunity should be added
         uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
         bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);
         require(success, "");

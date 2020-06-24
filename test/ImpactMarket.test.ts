@@ -51,9 +51,9 @@ contract('ImpactMarket', async (accounts) => {
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
+                maxClaimTen,
                 day,
                 hour,
-                maxClaimTen,
                 { from: adminAccount1 },
             );
             const communityManagerAddress = tx.logs[1].args[0];
@@ -118,9 +118,9 @@ contract('ImpactMarket', async (accounts) => {
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
+                maxClaimTen,
                 day,
                 hour,
-                maxClaimTen,
                 { from: adminAccount1 },
             );
             const communityManagerAddress = tx.logs[1].args[0];
@@ -164,8 +164,8 @@ contract('ImpactMarket', async (accounts) => {
         });
 
         it('should not claim without waiting enough', async () => {
-            const baseInterval = (await communityInstance.baseIntervalTime()).toNumber();
-            const incrementalInterval = (await communityInstance.incIntervalTime()).toNumber();
+            const baseInterval = (await communityInstance.baseInterval()).toNumber();
+            const incrementalInterval = (await communityInstance.incrementInterval()).toNumber();
             await communityInstance.claim({ from: beneficiaryA });
             await time.increase(time.duration.seconds(baseInterval + 5));
             await communityInstance.claim({ from: beneficiaryA });
@@ -182,7 +182,7 @@ contract('ImpactMarket', async (accounts) => {
         });
 
         it('should claim after waiting', async () => {
-            const baseInterval = (await communityInstance.baseIntervalTime()).toNumber();
+            const baseInterval = (await communityInstance.baseInterval()).toNumber();
             await time.increase(time.duration.seconds(baseInterval + 5));
             await communityInstance.claim({ from: beneficiaryA });
             (await cUSDInstance.balanceOf(beneficiaryA)).toString()
@@ -190,10 +190,10 @@ contract('ImpactMarket', async (accounts) => {
         });
 
         it('should not claim after max claim', async () => {
-            const baseInterval = (await communityInstance.baseIntervalTime()).toNumber();
-            const incrementalInterval = (await communityInstance.incIntervalTime()).toNumber();
-            const claimAmount = new BigNumber((await communityInstance.amountByClaim()).toString()).div(decimals).toNumber();
-            const maxClaimAmount = new BigNumber((await communityInstance.claimHardCap()).toString()).div(decimals).toNumber();
+            const baseInterval = (await communityInstance.baseInterval()).toNumber();
+            const incrementalInterval = (await communityInstance.incrementInterval()).toNumber();
+            const claimAmount = new BigNumber((await communityInstance.claimAmount()).toString()).div(decimals).toNumber();
+            const maxClaimAmount = new BigNumber((await communityInstance.maxClaim()).toString()).div(decimals).toNumber();
             await communityInstance.claim({ from: beneficiaryA });
             for (let index = 0; index < (maxClaimAmount / claimAmount) - 1; index++) {
                 await time.increase(time.duration.seconds(baseInterval + incrementalInterval * index + 5));
@@ -214,9 +214,9 @@ contract('ImpactMarket', async (accounts) => {
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
+                maxClaimTen,
                 day,
                 hour,
-                maxClaimTen,
                 { from: adminAccount1 },
             );
             const communityManagerAddress = tx.logs[1].args[0];
@@ -227,9 +227,9 @@ contract('ImpactMarket', async (accounts) => {
             const newTx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
+                maxClaimTen,
                 day,
                 hour,
-                maxClaimTen,
                 { from: adminAccount1 },
             );
             const newCommunityAddress = newTx.logs[1].args[0];
@@ -237,26 +237,24 @@ contract('ImpactMarket', async (accounts) => {
         });
 
         it('should be able edit community if manager', async () => {
-            (await communityInstance.incIntervalTime()).toString().should.be.equal(hour.toString());
+            (await communityInstance.incrementInterval()).toString().should.be.equal(hour.toString());
             await communityInstance.edit(
                 claimAmountTwo,
+                maxClaimTen,
                 week,
                 day,
-                maxClaimTen,
-                cUSDInstance.address,
                 { from: communityManagerA }
             );
-            (await communityInstance.incIntervalTime()).toString().should.be.equal(day.toString());
+            (await communityInstance.incrementInterval()).toString().should.be.equal(day.toString());
         });
 
         it('should not be able edit community if not manager', async () => {
             await expectRevert(
                 communityInstance.edit(
                     claimAmountTwo,
-                    day,
-                    day,
                     maxClaimTen,
-                    cUSDInstance.address,
+                    day,
+                    day,
                     { from: communityManagerB }
                 ),
                 "NOT_MANAGER"
@@ -267,20 +265,18 @@ contract('ImpactMarket', async (accounts) => {
             await expectRevert.unspecified(
                 communityInstance.edit(
                     claimAmountTwo,
+                    maxClaimTen,
                     day,
                     week,
-                    maxClaimTen,
-                    cUSDInstance.address,
                     { from: communityManagerA }
                 )
             );
             await expectRevert.unspecified(
                 communityInstance.edit(
                     maxClaimTen, // supposed to be wrong
+                    claimAmountTwo,
                     week,
                     day,
-                    claimAmountTwo,
-                    cUSDInstance.address,
                     { from: communityManagerA }
                 )
             );
@@ -347,19 +343,19 @@ contract('ImpactMarket', async (accounts) => {
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
+                maxClaimTen,
                 day,
                 hour,
-                maxClaimTen,
                 { from: adminAccount1 },
             );
             const communityManagerAddress = tx.logs[1].args[0];
             communityInstance = await Community.at(communityManagerAddress);
-            (await communityInstance.amountByClaim()).toString().should.be.equal(
+            (await communityInstance.claimAmount()).toString().should.be.equal(
                 claimAmountTwo.toString()
             );
-            (await communityInstance.baseIntervalTime()).toString().should.be.equal('86400');
-            (await communityInstance.incIntervalTime()).toString().should.be.equal('3600');
-            (await communityInstance.claimHardCap()).toString().should.be.equal(
+            (await communityInstance.baseInterval()).toString().should.be.equal('86400');
+            (await communityInstance.incrementInterval()).toString().should.be.equal('3600');
+            (await communityInstance.maxClaim()).toString().should.be.equal(
                 maxClaimTen.toString()
             );
 
@@ -369,9 +365,9 @@ contract('ImpactMarket', async (accounts) => {
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
+                maxClaimTen,
                 day,
                 hour,
-                maxClaimTen,
                 { from: adminAccount1 },
             );
             const communityManagerAddress = tx.logs[1].args[0];
@@ -409,9 +405,9 @@ contract('ImpactMarket', async (accounts) => {
                 impactMarketInstance.addCommunity(
                     communityManagerA,
                     claimAmountTwo,
+                    maxClaimTen,
                     hour,
                     day,
-                    maxClaimTen,
                     { from: adminAccount1 },
                 )
             );
@@ -419,9 +415,9 @@ contract('ImpactMarket', async (accounts) => {
                 impactMarketInstance.addCommunity(
                     communityManagerA,
                     maxClaimTen, // it's supposed to be wrong!
+                    claimAmountTwo,
                     day,
                     hour,
-                    claimAmountTwo,
                     { from: adminAccount1 },
                 )
             );
@@ -434,9 +430,9 @@ contract('ImpactMarket', async (accounts) => {
             const tx = await impactMarketInstance.addCommunity(
                 communityManager,
                 claimAmountTwo,
+                maxClaimTen,
                 day,
                 hour,
-                maxClaimTen,
                 { from: adminAccount1 },
             );
             // eslint-disable-next-line prefer-const
@@ -467,9 +463,9 @@ contract('ImpactMarket', async (accounts) => {
             await instance.claim({ from: beneficiaryAddress });
             const currentBalance = new BigNumber(await cUSDInstance.balanceOf(beneficiaryAddress));
             const currentLastInterval = new BigNumber(await instance.lastInterval(beneficiaryAddress));
-            previousBalance.plus(await instance.amountByClaim()).toString()
+            previousBalance.plus(await instance.claimAmount()).toString()
                 .should.be.equal(currentBalance.toString());
-            previousLastInterval.plus(await instance.incIntervalTime()).toString()
+            previousLastInterval.plus(await instance.incrementInterval()).toString()
                 .should.be.equal(currentLastInterval.toString());
         }
 
@@ -507,8 +503,8 @@ contract('ImpactMarket', async (accounts) => {
             await waitClaimTime(communityInstanceA, beneficiaryB);
             await beneficiaryClaim(communityInstanceA, beneficiaryB);
             // beneficiary C claims it all
-            const claimAmount = new BigNumber((await communityInstanceA.amountByClaim()).toString()).div(decimals).toNumber();
-            const maxClaimAmount = new BigNumber((await communityInstanceA.claimHardCap()).toString()).div(decimals).toNumber();
+            const claimAmount = new BigNumber((await communityInstanceA.claimAmount()).toString()).div(decimals).toNumber();
+            const maxClaimAmount = new BigNumber((await communityInstanceA.maxClaim()).toString()).div(decimals).toNumber();
             const maxClaimsPerUser = maxClaimAmount / claimAmount;
             for (let index = 0; index < maxClaimsPerUser; index++) {
                 await waitClaimTime(communityInstanceA, beneficiaryC);
@@ -549,16 +545,16 @@ contract('ImpactMarket', async (accounts) => {
             await waitClaimTime(communityInstanceA, beneficiaryA);
             await beneficiaryClaim(communityInstanceA, beneficiaryA);
             // beneficiary B claims it all
-            const claimAmountA = new BigNumber((await communityInstanceA.amountByClaim()).toString()).div(decimals).toNumber();
-            const maxClaimAmountA = new BigNumber((await communityInstanceA.claimHardCap()).toString()).div(decimals).toNumber();
+            const claimAmountA = new BigNumber((await communityInstanceA.claimAmount()).toString()).div(decimals).toNumber();
+            const maxClaimAmountA = new BigNumber((await communityInstanceA.maxClaim()).toString()).div(decimals).toNumber();
             const maxClaimsPerUserA = maxClaimAmountA / claimAmountA;
             for (let index = 0; index < maxClaimsPerUserA; index++) {
                 await waitClaimTime(communityInstanceA, beneficiaryB);
                 await beneficiaryClaim(communityInstanceA, beneficiaryB);
             }
             // beneficiary C claims it all
-            const claimAmountB = new BigNumber((await communityInstanceB.amountByClaim()).toString()).div(decimals).toNumber();
-            const maxClaimAmountB = new BigNumber((await communityInstanceB.claimHardCap()).toString()).div(decimals).toNumber();
+            const claimAmountB = new BigNumber((await communityInstanceB.claimAmount()).toString()).div(decimals).toNumber();
+            const maxClaimAmountB = new BigNumber((await communityInstanceB.maxClaim()).toString()).div(decimals).toNumber();
             const maxClaimsPerUserB = maxClaimAmountB / claimAmountB;
             for (let index = 0; index < maxClaimsPerUserB; index++) {
                 await waitClaimTime(communityInstanceB, beneficiaryC);
