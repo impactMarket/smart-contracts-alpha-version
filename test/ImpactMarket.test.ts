@@ -1,5 +1,5 @@
 import { should } from 'chai';
-import { ImpactMarketInstance, CommunityInstance, cUSDInstance } from '../types/truffle-contracts';
+import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../types/truffle-contracts';
 import BigNumber from 'bignumber.js';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert, expectEvent, time } = require('@openzeppelin/test-helpers');
@@ -7,6 +7,7 @@ const { expectRevert, expectEvent, time } = require('@openzeppelin/test-helpers'
 
 const ImpactMarket = artifacts.require('./ImpactMarket.sol') as Truffle.Contract<ImpactMarketInstance>;
 const Community = artifacts.require('./Community.sol') as Truffle.Contract<CommunityInstance>;
+const CommunityFactory = artifacts.require('./CommunityFactory.sol') as Truffle.Contract<CommunityFactoryInstance>;
 const cUSD = artifacts.require('./test/cUSD.sol') as Truffle.Contract<cUSDInstance>;
 should();
 enum BeneficiaryState {
@@ -34,6 +35,7 @@ contract('ImpactMarket', async (accounts) => {
     // contract instances
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
+    let communityFactoryInstance: CommunityFactoryInstance;
     let cUSDInstance: cUSDInstance;
     // constants
     const decimals = new BigNumber(10).pow(18);
@@ -48,6 +50,8 @@ contract('ImpactMarket', async (accounts) => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
+            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
@@ -115,6 +119,8 @@ contract('ImpactMarket', async (accounts) => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
+            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
@@ -165,16 +171,16 @@ contract('ImpactMarket', async (accounts) => {
 
         it('should not claim without waiting enough', async () => {
             const baseInterval = (await communityInstance.baseInterval()).toNumber();
-            const incrementalInterval = (await communityInstance.incrementInterval()).toNumber();
+            const incrementInterval = (await communityInstance.incrementInterval()).toNumber();
             await communityInstance.claim({ from: beneficiaryA });
             await time.increase(time.duration.seconds(baseInterval + 5));
             await communityInstance.claim({ from: beneficiaryA });
-            await time.increase(time.duration.seconds(incrementalInterval + 5));
+            await time.increase(time.duration.seconds(incrementInterval + 5));
             await expectRevert(
                 communityInstance.claim({ from: beneficiaryA }),
                 "NOT_YET"
             );
-            await time.increase(time.duration.seconds(incrementalInterval + 5));
+            await time.increase(time.duration.seconds(incrementInterval + 5));
             await expectRevert(
                 communityInstance.claim({ from: beneficiaryA }),
                 "NOT_YET"
@@ -191,15 +197,15 @@ contract('ImpactMarket', async (accounts) => {
 
         it('should not claim after max claim', async () => {
             const baseInterval = (await communityInstance.baseInterval()).toNumber();
-            const incrementalInterval = (await communityInstance.incrementInterval()).toNumber();
+            const incrementInterval = (await communityInstance.incrementInterval()).toNumber();
             const claimAmount = new BigNumber((await communityInstance.claimAmount()).toString()).div(decimals).toNumber();
             const maxClaimAmount = new BigNumber((await communityInstance.maxClaim()).toString()).div(decimals).toNumber();
             await communityInstance.claim({ from: beneficiaryA });
             for (let index = 0; index < (maxClaimAmount / claimAmount) - 1; index++) {
-                await time.increase(time.duration.seconds(baseInterval + incrementalInterval * index + 5));
+                await time.increase(time.duration.seconds(baseInterval + incrementInterval * index + 5));
                 await communityInstance.claim({ from: beneficiaryA });
             }
-            await time.increase(time.duration.seconds(baseInterval + incrementalInterval * (maxClaimAmount / claimAmount) + 5));
+            await time.increase(time.duration.seconds(baseInterval + incrementInterval * (maxClaimAmount / claimAmount) + 5));
             await expectRevert(
                 communityInstance.claim({ from: beneficiaryA }),
                 "MAX_CLAIM"
@@ -211,6 +217,8 @@ contract('ImpactMarket', async (accounts) => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
+            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
@@ -337,6 +345,8 @@ contract('ImpactMarket', async (accounts) => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
+            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
         });
 
         it('should be able to add a community if admin', async () => {
@@ -473,6 +483,8 @@ contract('ImpactMarket', async (accounts) => {
         beforeEach(async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address);
+            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
         });
         it('one beneficiary to one community', async () => {
             const communityInstanceA = await addCommunity(communityManagerA);

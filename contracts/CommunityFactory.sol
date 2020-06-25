@@ -20,7 +20,7 @@ contract CommunityFactory {
         require(
             IImpactMarket(impactMarketAddress).hasRole(
                 keccak256("ADMIN_ROLE"),
-                msg.sender
+                tx.origin
             ),
             "NOT_ADMIN"
         );

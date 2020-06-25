@@ -39,14 +39,12 @@ contract ImpactMarket is AccessControl {
      * @dev Constructor only with the cUSD contract address. It
      * also sets the first admin, which later can add others
      * and add/remove communities.
-     * @param _communityFactory Community Factory address.
      * @param _cUSDAddress cUSD smart contract address.
      */
-    constructor(address _communityFactory, address _cUSDAddress) public {
+    constructor(address _cUSDAddress) public {
         _setupRole(ADMIN_ROLE, msg.sender);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         cUSDAddress = _cUSDAddress;
-        communityFactory = _communityFactory;
     }
 
     modifier onlyAdmin() {
@@ -115,10 +113,6 @@ contract ImpactMarket is AccessControl {
         emit CommunityRemoved(_community);
     }
 
-    // function migrateCommunity(address _previousCommunity) public onlyAdmin {
-    //     // TODO: to implement!
-    // }
-
     function addAdmin(address _account) external onlyAdmin {
         grantRole(ADMIN_ROLE, _account);
     }
@@ -127,8 +121,7 @@ contract ImpactMarket is AccessControl {
         revokeRole(ADMIN_ROLE, _account);
     }
 
-    // NOTES:
-
-    // To get all the existing communities, go through
-    // the CommunityAdded events.
+    function setCommunityFactory(address _communityFactory) external onlyAdmin {
+        communityFactory = _communityFactory;
+    }
 }
