@@ -1,10 +1,14 @@
 const ImpactMarket = artifacts.require('ImpactMarket');
+const CommunityFactory = artifacts.require('CommunityFactory');
 
 module.exports = async (deployer, network, accounts) => {
     if (network === 'alfajores') {
         const cUSDAddress = '0xa561131a1C8aC25925FB848bCa45A74aF61e5A38';
         await deployer.deploy(ImpactMarket, cUSDAddress);
         const impactMarket = await ImpactMarket.deployed();
+        await deployer.deploy(CommunityFactory, cUSDAddress, impactMarket.address);
+        const communityFactory = await CommunityFactory.deployed();
+        await impactMarket.setCommunityFactory(communityFactory.address);
         //
         // const message = 'Job losses in April likely topped 20 million and the unemployment rate hit a post-World War II high';
         // web3.eth.sendTransaction({
