@@ -29,7 +29,7 @@ To deploy in a local network, start ganache with `yarn local-testnet`.
 
 Deploy with `npx truffle deploy --network development`.
 
-**NOTE**: ImpactMarket on Alfajores testnet is currently deployed at **0x52Fb07781152fa57f8CeF1eAeF789e4B5400Ca97**.
+**NOTE**: *ImpactMarket* on Alfajores testnet is currently deployed at **0xc57594675444BeC25f2863B8549c8e485dA290C1** and *CommunityFactory* at **0xAD99868D1A933277eEbBb50052E66Fb0b495Aee1**.
 
 ## Step by step...
 
@@ -37,7 +37,7 @@ Deploy with `npx truffle deploy --network development`.
 - [x] Deploy smart contracts to alfajores testnet
 - [x] Refactor smart contracts (integrate with tokens, etc)
 - [x] Deploy to alfajores testnet, integrating with cUSD
-- [ ] Create a community migration system (WIP) (requires detailed specification)
+- [ ] Create a community migration system (WIP)
 - [ ] ...
 
 ## Useful tools and links
