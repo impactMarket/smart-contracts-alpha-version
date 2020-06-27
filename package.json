@@ -1,6 +1,6 @@
 {
     "name": "@impact-market/smart-contracts",
-    "version": "0.0.1-alpha.9",
+    "version": "0.0.1-alpha.10",
     "description": "Decentralized impact-driven 2-sided marketplace to provide financial services to charities and vulnerable beneficiaries.",
     "scripts": {
         "account": "node utils/createAccount.js",
