@@ -7,4 +7,5 @@ interface ICommunity {
     function incrementInterval() external view returns(uint256);
     function maxClaim() external view returns(uint256);
     function previousCommunityContract() external view returns(address);
+    function hasRole(bytes32 role, address account) external view returns(bool);
 }

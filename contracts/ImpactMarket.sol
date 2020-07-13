@@ -70,7 +70,7 @@ contract ImpactMarket is AccessControl {
             _incrementInterval,
             address(0)
         );
-        require(community != address(0), "");
+        require(community != address(0), "NOT_VALID");
         communities[community] = true;
         emit CommunityAdded(
             community,
@@ -93,7 +93,7 @@ contract ImpactMarket is AccessControl {
     ) external onlyAdmin {
         communities[_previousCommunityAddress] = false;
         ICommunity previousCommunity = ICommunity(_previousCommunityAddress);
-        require(address(previousCommunity) != address(0), "");
+        require(address(previousCommunity) != address(0), "NOT_VALID");
         address community = ICommunityFactory(communityFactory).deployCommunity(
             _firstManager,
             previousCommunity.claimAmount(),
@@ -102,7 +102,7 @@ contract ImpactMarket is AccessControl {
             previousCommunity.incrementInterval(),
             _previousCommunityAddress
         );
-        require(community != address(0), "");
+        require(community != address(0), "NOT_VALID");
         communities[community] = true;
         emit CommunityMigrated(
             _firstManager,

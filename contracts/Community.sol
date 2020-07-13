@@ -46,7 +46,7 @@ contract Community is AccessControl {
     );
     event CommunityLocked(address indexed _by);
     event CommunityUnlocked(address indexed _by);
-    event MigratedCommunity(address indexed _to, uint256 _amount);
+    event MigratedFunds(address indexed _to, uint256 _amount);
 
     /**
      * @dev Constructor with custom fields, choosen by the community.
@@ -218,10 +218,11 @@ contract Community is AccessControl {
      */
     function migrateFunds(address _newCommunity) external onlyManagers {
         ICommunity newCommunity = ICommunity(_newCommunity);
+        require(newCommunity.hasRole(MANAGER_ROLE, msg.sender) == true, "NOT_ALLOWED");
         require(newCommunity.previousCommunityContract() == address(this), "NOT_ALLOWED");
         uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
         bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);
         require(success, "NOT_ALLOWED");
-        emit MigratedCommunity(_newCommunity, balance);
+        emit MigratedFunds(_newCommunity, balance);
     }
 }

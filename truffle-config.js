@@ -1,20 +1,23 @@
-// const Kit = require('@celo/contractkit')
-// const path = require('path')
-
-// // Connect to the desired network
-// const kit = Kit.newKit('https://alfajores-forno.celo-testnet.org')
-
-// const getAccount = require('./utils/getAccount').getAccount
-
-// async function awaitWrapper() {
-//     let account = await getAccount()
-//     console.log(`Account address: ${account.address}`)
-//     kit.addAccount(account.privateKey)
-// }
-
-// awaitWrapper()
-
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable no-undef */
 require('ts-node/register');
+
+const Kit = require('@celo/contractkit')
+let kit;
+
+async function awaitWrapper() {
+    // kit = Kit.newKit('https://alfajores-forno.celo-testnet.org')
+    // const getAccount = require('./utils/getAccount').getAccount
+    // let account = await getAccount()
+    // console.log(`Account address: ${account.address}`)
+    // kit.addAccount(account.privateKey)
+}
+
+console.log(process.env.npm_lifecycle_event);
+if (process.env.npm_lifecycle_event !== 'test' && process.env.npm_lifecycle_event !== 'coverage') {
+    awaitWrapper()
+}
+
 module.exports = {
     test_file_extension_regexp: /.*\.ts$/,
     // See <http://truffleframework.com/docs/advanced/configuration>
@@ -32,11 +35,10 @@ module.exports = {
             network_id: "*",
         },
 
-        alfajores: {
-            host: "127.0.0.1",
-            port: 8545,
-            network_id: 44786
-        },
+        // alfajores: {
+        //     provider: kit.web3.currentProvider,
+        //     network_id: 44786
+        // },
 
         // this is necessary for coverage
         coverage: {
@@ -51,13 +53,13 @@ module.exports = {
     // Set default mocha options here, use special reporters etc.
     mocha: {
         timeout: 100000,
-        reporter: 'eth-gas-reporter',
-        reporterOptions: {
-            excludeContracts: [
-                'cUSD',
-                'Migrations'
-            ]
-        }
+        // reporter: 'eth-gas-reporter',
+        // reporterOptions: {
+        //     excludeContracts: [
+        //         'cUSD',
+        //         'Migrations'
+        //     ]
+        // }
     },
 
     plugins: ['solidity-coverage'],

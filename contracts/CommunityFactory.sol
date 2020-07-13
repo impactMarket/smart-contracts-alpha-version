@@ -8,8 +8,8 @@ import "./interfaces/IImpactMarket.sol";
  * @notice Welcome to CommunityFactory
  */
 contract CommunityFactory {
-    address private cUSDAddress;
-    address private impactMarketAddress;
+    address public cUSDAddress;
+    address public impactMarketAddress;
 
     constructor(address _cUSDAddress, address _impactMarketAddress) public {
         cUSDAddress = _cUSDAddress;

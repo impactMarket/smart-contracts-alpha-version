@@ -227,21 +227,66 @@ contract('ImpactMarket', async (accounts) => {
                 hour,
                 { from: adminAccount1 },
             );
-            const communityManagerAddress = tx.logs[1].args[0];
-            communityInstance = await Community.at(communityManagerAddress);
+            const communityAddress = tx.logs[1].args[0];
+            communityInstance = await Community.at(communityAddress);
         });
 
         it('should be able to migrate funds from community if manager', async () => {
-            const newTx = await impactMarketInstance.addCommunity(
+            const newTx = await impactMarketInstance.migrateCommunity(
                 communityManagerA,
-                claimAmountTwo,
-                maxClaimTen,
-                day,
-                hour,
+                communityInstance.address,
                 { from: adminAccount1 },
             );
-            const newCommunityAddress = newTx.logs[1].args[0];
+            const newCommunityAddress = newTx.logs[1].args[1];
             await communityInstance.migrateFunds(newCommunityAddress, { from: communityManagerA });
+        });
+
+        // it('should not be able to migrate funds with invalid previous community', async () => {
+        //     const tx2 = await impactMarketInstance.addCommunity(
+        //         communityManagerA,
+        //         claimAmountTwo,
+        //         maxClaimTen,
+        //         day,
+        //         hour,
+        //         { from: adminAccount1 },
+        //     );
+        //     const communityAddress2 = tx2.logs[1].args[0];
+        //     const communityInstance2 = await Community.at(communityAddress2);
+        //     await expectRevert(
+        //         impactMarketInstance.migrateCommunity(
+        //             communityManagerA,
+        //             communityInstance2.address,
+        //             { from: adminAccount1 },
+        //         ),
+        //         'NOT_ALLOWED'
+        //     );
+        // });
+
+        // it('should not be able to migrate community from invalid impactMarket contract', async () => {
+        //     const impactMarketInstance2 = await ImpactMarket.new(cUSDInstance.address, { from: adminAccount2 });
+        //     const communityFactoryInstance2 = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance2.address, { from: adminAccount2 });
+        //     await impactMarketInstance2.setCommunityFactory(communityFactoryInstance2.address, { from: adminAccount2 });
+        //     const newTx = await impactMarketInstance2.migrateCommunity(
+        //         communityManagerA,
+        //         communityInstance.address,
+        //         { from: adminAccount2 },
+        //     );
+        //     const newCommunityAddress = newTx.logs[1].args[1];
+        //     await expectRevert(
+        //         communityInstance.migrateFunds(newCommunityAddress, { from: communityManagerA }),
+        //         'NOT_ALLOWED'
+        //     );
+        // });
+
+        it('should not be able to migrate community if not admin', async () => {
+            await expectRevert(
+                impactMarketInstance.migrateCommunity(
+                    communityManagerA,
+                    cUSDInstance.address, // wrong on purpose
+                    { from: adminAccount2 },
+                ),
+                'NOT_ADMIN'
+            );
         });
 
         it('should be able edit community if manager', async () => {
