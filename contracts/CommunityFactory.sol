@@ -40,7 +40,7 @@ contract CommunityFactory {
         uint256 _incrementInterval,
         address _previousCommunityAddress
     ) external onlyImpactMarketAdmin returns (address) {
-        require(msg.sender == impactMarketAddress, "");
+        require(msg.sender == impactMarketAddress, "NOT_ALLOWED");
         return
             address(
                 new Community(

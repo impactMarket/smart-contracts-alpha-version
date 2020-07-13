@@ -6,4 +6,5 @@ interface ICommunity {
     function baseInterval() external view returns(uint256);
     function incrementInterval() external view returns(uint256);
     function maxClaim() external view returns(uint256);
+    function previousCommunityContract() external view returns(address);
 }

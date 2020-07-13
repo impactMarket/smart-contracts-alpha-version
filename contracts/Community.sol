@@ -3,6 +3,7 @@ pragma solidity ^0.6.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./interfaces/ICommunity.sol";
 
 /**
  * @notice Welcome to the Community contract. For each community
@@ -45,6 +46,7 @@ contract Community is AccessControl {
     );
     event CommunityLocked(address indexed _by);
     event CommunityUnlocked(address indexed _by);
+    event MigratedCommunity(address indexed _to, uint256 _amount);
 
     /**
      * @dev Constructor with custom fields, choosen by the community.
@@ -167,7 +169,7 @@ contract Community is AccessControl {
         );
         emit BeneficiaryClaim(msg.sender, claimAmount);
         bool success = IERC20(cUSDAddress).transfer(msg.sender, claimAmount);
-        require(success, "");
+        require(success, "NOT_ALLOWED");
     }
 
     /**
@@ -215,12 +217,11 @@ contract Community is AccessControl {
      * Migrate funds in current community to new one (temporary version).
      */
     function migrateFunds(address _newCommunity) external onlyManagers {
-        // TODO: planning
-        // to migrate, there must have a new version
-        // next community must have the current address as previousCommunity
-        // an event MigratedCommunity should be added
+        ICommunity newCommunity = ICommunity(_newCommunity);
+        require(newCommunity.previousCommunityContract() == address(this), "NOT_ALLOWED");
         uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
         bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);
-        require(success, "");
+        require(success, "NOT_ALLOWED");
+        emit MigratedCommunity(_newCommunity, balance);
     }
 }

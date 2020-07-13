@@ -10,9 +10,8 @@ import "./Community.sol";
  * @notice Welcome to ImpactMarket, the main contract. This is an
  * administrative (for now) contract where the admins have control
  * over the list of communities. Being only able to add and
- * remoev communities
+ * remove communities
  */
-// TODO: implementr interface
 contract ImpactMarket is AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
@@ -34,12 +33,11 @@ contract ImpactMarket is AccessControl {
         address indexed _communityAddress,
         address indexed _previousCommunityAddress
     );
+    event CommunityFactoryChanged(address indexed _newCommunityFactory);
 
     /**
-     * @dev Constructor only with the cUSD contract address. It
-     * also sets the first admin, which later can add others
+     * @dev It sets the first admin, which later can add others
      * and add/remove communities.
-     * @param _cUSDAddress cUSD smart contract address.
      */
     constructor(address _cUSDAddress) public {
         _setupRole(ADMIN_ROLE, msg.sender);
@@ -84,6 +82,11 @@ contract ImpactMarket is AccessControl {
         );
     }
 
+    /**
+     * @dev Migrate community by deploying a new contract. Can be used only by an admin.
+     * For further information regarding each parameter, see
+     * *Community* smart contract constructor.
+     */
     function migrateCommunity(
         address _firstManager,
         address _previousCommunityAddress
@@ -124,7 +127,13 @@ contract ImpactMarket is AccessControl {
         revokeRole(ADMIN_ROLE, _account);
     }
 
+    /**
+     * @dev Set the community factory address, if the contract is valid.
+     */
     function setCommunityFactory(address _communityFactory) external onlyAdmin {
+        ICommunityFactory factory = ICommunityFactory(_communityFactory);
+        require(factory.impactMarketAddress() == address(this), "NOT_ALLOWED");
         communityFactory = _communityFactory;
+        emit CommunityFactoryChanged(_communityFactory);
     }
 }

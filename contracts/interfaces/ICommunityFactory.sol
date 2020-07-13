@@ -10,4 +10,5 @@ interface ICommunityFactory {
         uint256 _incrementInterval,
         address _previousCommunityAddress
     ) external returns(address);
+    function impactMarketAddress() external view returns(address);
 }
