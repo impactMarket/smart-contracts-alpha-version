@@ -29,7 +29,7 @@ To deploy in a local network, start ganache with `yarn local-testnet`.
 
 Deploy with `npx truffle deploy --network development`.
 
-**NOTE**: *ImpactMarket* on Alfajores testnet is currently deployed at **0xc57594675444BeC25f2863B8549c8e485dA290C1** and *CommunityFactory* at **0xAD99868D1A933277eEbBb50052E66Fb0b495Aee1**.
+**NOTE**: *ImpactMarket* on Alfajores testnet is currently deployed at **0xc70cC218AE84cfDb0De11783082c49E3702092fb** and *CommunityFactory* at **0x87E1C49797EC7b0C785AE8EE8148254911884959**.
 
 ## Step by step...
 

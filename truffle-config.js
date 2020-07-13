@@ -2,21 +2,21 @@
 /* eslint-disable no-undef */
 require('ts-node/register');
 
-const Kit = require('@celo/contractkit')
-let kit;
+// const Kit = require('@celo/contractkit')
+// const path = require('path')
 
-async function awaitWrapper() {
-    // kit = Kit.newKit('https://alfajores-forno.celo-testnet.org')
-    // const getAccount = require('./utils/getAccount').getAccount
-    // let account = await getAccount()
-    // console.log(`Account address: ${account.address}`)
-    // kit.addAccount(account.privateKey)
-}
+// // Connect to the desired network
+// const kit = Kit.newKit('https://alfajores-forno.celo-testnet.org')
 
-console.log(process.env.npm_lifecycle_event);
-if (process.env.npm_lifecycle_event !== 'test' && process.env.npm_lifecycle_event !== 'coverage') {
-    awaitWrapper()
-}
+// const getAccount = require('./utils/getAccount').getAccount
+
+// async function awaitWrapper(){
+//     let account = await getAccount()
+//     console.log(`Account address: ${account.address}`)
+//     kit.addAccount(account.privateKey)
+// }
+
+// awaitWrapper()
 
 module.exports = {
     test_file_extension_regexp: /.*\.ts$/,
