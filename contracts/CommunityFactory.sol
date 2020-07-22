@@ -16,14 +16,8 @@ contract CommunityFactory {
         impactMarketAddress = _impactMarketAddress;
     }
 
-    modifier onlyImpactMarketAdmin() {
-        require(
-            IImpactMarket(impactMarketAddress).hasRole(
-                keccak256("ADMIN_ROLE"),
-                tx.origin
-            ),
-            "NOT_ADMIN"
-        );
+    modifier onlyImpactMarket() {
+        require(msg.sender == impactMarketAddress, "NOT_ALLOWED");
         _;
     }
 
@@ -39,8 +33,7 @@ contract CommunityFactory {
         uint256 _baseInterval,
         uint256 _incrementInterval,
         address _previousCommunityAddress
-    ) external onlyImpactMarketAdmin returns (address) {
-        require(msg.sender == impactMarketAddress, "NOT_ALLOWED");
+    ) external onlyImpactMarket returns (address) {
         return
             address(
                 new Community(
@@ -50,7 +43,8 @@ contract CommunityFactory {
                     _baseInterval,
                     _incrementInterval,
                     _previousCommunityAddress,
-                    cUSDAddress
+                    cUSDAddress,
+                    msg.sender
                 )
             );
     }

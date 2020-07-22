@@ -232,13 +232,18 @@ contract('ImpactMarket', async (accounts) => {
         });
 
         it('should be able to migrate funds from community if manager', async () => {
+            const previousCommunityPreviousBalance = await cUSDInstance.balanceOf(communityInstance.address);
             const newTx = await impactMarketInstance.migrateCommunity(
                 communityManagerA,
                 communityInstance.address,
                 { from: adminAccount1 },
             );
             const newCommunityAddress = newTx.logs[1].args[1];
-            await communityInstance.migrateFunds(newCommunityAddress, { from: communityManagerA });
+            communityInstance = await Community.at(newCommunityAddress);
+            const previousCommunityNewBalance = await cUSDInstance.balanceOf(communityInstance.address);
+            const newCommunityNewBalance = await cUSDInstance.balanceOf(newCommunityAddress);
+            previousCommunityPreviousBalance.toString().should.be.equal(newCommunityNewBalance.toString());
+            previousCommunityNewBalance.toString().should.be.equal('0');
         });
 
         it('should not be able to add community if missing signatures', async () => {

@@ -145,6 +145,7 @@ contract ImpactMarket is AccessControl {
             _previousCommunityAddress
         );
         require(community != address(0), "NOT_VALID");
+        previousCommunity.migrateFunds(community, _firstManager);
         communities[community] = true;
         emit CommunityMigrated(
             _firstManager,

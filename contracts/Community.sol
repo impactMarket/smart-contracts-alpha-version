@@ -28,6 +28,7 @@ contract Community is AccessControl {
     uint256 public maxClaim;
 
     address public previousCommunityContract;
+    address public impactMarketAddress;
     address public cUSDAddress;
     bool public locked;
 
@@ -66,7 +67,8 @@ contract Community is AccessControl {
         uint256 _baseInterval,
         uint256 _incrementInterval,
         address _previousCommunityContract,
-        address _cUSDAddress
+        address _cUSDAddress,
+        address _impactMarketAddress
     ) public {
         require(_baseInterval > _incrementInterval, "");
         require(_maxClaim > _claimAmount, "");
@@ -82,6 +84,7 @@ contract Community is AccessControl {
 
         previousCommunityContract = _previousCommunityContract;
         cUSDAddress = _cUSDAddress;
+        impactMarketAddress = _impactMarketAddress;
         locked = false;
     }
 
@@ -100,6 +103,11 @@ contract Community is AccessControl {
 
     modifier onlyManagers() {
         require(hasRole(MANAGER_ROLE, msg.sender), "NOT_MANAGER");
+        _;
+    }
+
+    modifier onlyImpactMarket() {
+        require(msg.sender == impactMarketAddress, "NOT_ALLOWED");
         _;
     }
 
@@ -214,12 +222,21 @@ contract Community is AccessControl {
     }
 
     /**
-     * Migrate funds in current community to new one (temporary version).
+     * Migrate funds in current community to new one.
      */
-    function migrateFunds(address _newCommunity) external onlyManagers {
+    function migrateFunds(address _newCommunity, address _newCommunityManager)
+        external
+        onlyImpactMarket
+    {
         ICommunity newCommunity = ICommunity(_newCommunity);
-        require(newCommunity.hasRole(MANAGER_ROLE, msg.sender) == true, "NOT_ALLOWED");
-        require(newCommunity.previousCommunityContract() == address(this), "NOT_ALLOWED");
+        require(
+            newCommunity.hasRole(MANAGER_ROLE, _newCommunityManager) == true,
+            "NOT_ALLOWED"
+        );
+        require(
+            newCommunity.previousCommunityContract() == address(this),
+            "NOT_ALLOWED"
+        );
         uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
         bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);
         require(success, "NOT_ALLOWED");
