@@ -2,7 +2,7 @@ import { should } from 'chai';
 import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../types/truffle-contracts';
 import BigNumber from 'bignumber.js';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { expectRevert, expectEvent, time } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent, time, constants } = require('@openzeppelin/test-helpers');
 
 
 const ImpactMarket = artifacts.require('./ImpactMarket.sol') as Truffle.Contract<ImpactMarketInstance>;
@@ -315,42 +315,24 @@ contract('ImpactMarket', async (accounts) => {
             );
         });
 
-        // it('should not be able to migrate funds with invalid previous community', async () => {
-        //     const tx2 = await impactMarketInstance.addCommunity(
-        //         communityManagerA,
-        //         claimAmountTwo,
-        //         maxClaimTen,
-        //         day,
-        //         hour,
-        //         { from: adminAccount1 },
-        //     );
-        //     const communityAddress2 = tx2.logs[1].args[0];
-        //     const communityInstance2 = await Community.at(communityAddress2);
-        //     await expectRevert(
-        //         impactMarketInstance.migrateCommunity(
-        //             communityManagerA,
-        //             communityInstance2.address,
-        //             { from: adminAccount1 },
-        //         ),
-        //         'NOT_ALLOWED'
-        //     );
-        // });
+        it('should not be able toset factory from invalid impactMarket contract', async () => {
+            const impactMarketInstance2 = await ImpactMarket.new(cUSDInstance.address, [adminAccount2], { from: adminAccount2 });
+            await expectRevert(
+                impactMarketInstance2.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 }),
+                'NOT_ALLOWED'
+            );
+        });
 
-        // it('should not be able to migrate community from invalid impactMarket contract', async () => {
-        //     const impactMarketInstance2 = await ImpactMarket.new(cUSDInstance.address, [adminAccount2], { from: adminAccount2 });
-        //     const communityFactoryInstance2 = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance2.address, { from: adminAccount2 });
-        //     await impactMarketInstance2.setCommunityFactory(communityFactoryInstance2.address, { from: adminAccount2 });
-        //     const newTx = await impactMarketInstance2.migrateCommunity(
-        //         communityManagerA,
-        //         communityInstance.address,
-        //         { from: adminAccount2 },
-        //     );
-        //     const newCommunityAddress = newTx.logs[1].args[1];
-        //     await expectRevert(
-        //         communityInstance.migrateFunds(newCommunityAddress, { from: communityManagerA }),
-        //         'NOT_ALLOWED'
-        //     );
-        // });
+        it('should not be able to migrate from invalid community', async () => {
+            await expectRevert(
+                impactMarketInstance.migrateCommunity(
+                    communityManagerA,
+                    constants.ZERO_ADDRESS,
+                    { from: adminAccount1 },
+                ),
+                'NOT_VALID'
+            );
+        });
 
         it('should not be able to migrate community if not admin', async () => {
             await expectRevert(

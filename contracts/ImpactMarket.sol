@@ -166,14 +166,6 @@ contract ImpactMarket is AccessControl {
         emit CommunityRemoved(_community);
     }
 
-    // function addAdmin(address _account) external onlyAdmin {
-    //     grantRole(ADMIN_ROLE, _account);
-    // }
-
-    // function removeAdmin(address _account) external onlyAdmin {
-    //     revokeRole(ADMIN_ROLE, _account);
-    // }
-
     /**
      * @dev Set the community factory address, if the contract is valid.
      */
