@@ -62,11 +62,12 @@ contract ImpactMarket is AccessControl {
         );
         address[] memory validations = pendingValidations[requestIdentifier];
         for (uint8 u = 0; u < validations.length; u += 1) {
-            require(validations[u] == msg.sender, "SIGNED");
+            require(validations[u] != msg.sender, "SIGNED");
         }
         pendingValidations[requestIdentifier].push(msg.sender);
-        uint256 size = pendingValidations[requestIdentifier].length;
-        if (size == signaturesThreshold) {
+        uint256 totalValidations = pendingValidations[requestIdentifier].length;
+        if (totalValidations == signaturesThreshold) {
+            delete pendingValidations[requestIdentifier];
             _;
         }
     }

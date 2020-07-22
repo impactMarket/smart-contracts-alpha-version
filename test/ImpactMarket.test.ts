@@ -261,7 +261,8 @@ contract('ImpactMarket', async (accounts) => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [adminAccount1, adminAccount2]);
             communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
-            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount1 });
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 });
             await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
