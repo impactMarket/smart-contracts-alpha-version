@@ -182,4 +182,16 @@ contract ImpactMarket is AccessControl {
         communityFactory = _communityFactory;
         emit CommunityFactoryChanged(_communityFactory);
     }
+
+    /**
+     * @dev Init community factory, used only at deploy time.
+     */
+    function initCommunityFactory(address _communityFactory)
+        external
+        onlyAdmin
+    {
+        require(communityFactory == address(0), "");
+        communityFactory = _communityFactory;
+        emit CommunityFactoryChanged(_communityFactory);
+    }
 }
