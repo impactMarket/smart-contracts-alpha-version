@@ -27,7 +27,8 @@
     "homepage": "https://github.com/impactMarket/smart-contracts#readme",
     "dependencies": {
         "@celo/contractkit": "0.4.0",
-        "@openzeppelin/contracts": "3.0.0"
+        "@openzeppelin/contracts": "3.0.0",
+        "dotenv": "8.2.0"
     },
     "devDependencies": {
         "@celo/ganache-cli": "6.6.1",
