@@ -13,7 +13,8 @@
         "coverage:ci": "CI=true SOLIDITY_COVERAGE=true scripts/test.sh",
         "generate-ts": "truffle compile && typechain --target truffle --outDir types/truffle-contracts './build/contracts/*.json'",
         "lint:ts": "eslint \"test/**/*.ts\"",
-        "security": "slither . --filter-paths \"@openzeppelin|test|Migrations.sol\" --truffle-version truffle@5.1.29 --exclude-informational --exclude-low"
+        "security": "slither . --filter-paths \"@openzeppelin|test|Migrations.sol\" --truffle-version truffle@5.1.29 --exclude-informational --exclude-low",
+        "localnet": "ganache-cli --gasLimit 0xfffffffffff --port 8545"
     },
     "repository": {
         "type": "git",

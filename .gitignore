@@ -116,5 +116,5 @@ dist
 
 build/
 types/
-.secret
+.secret*
 coverage.json

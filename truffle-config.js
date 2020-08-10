@@ -6,7 +6,9 @@ const Kit = require('@celo/contractkit')
 const path = require('path')
 
 // Connect to the desired network
-const kit = Kit.newKit('https://alfajores-forno.celo-testnet.org')
+// https://rc1-forno.celo-testnet.org
+// https://alfajores-forno.celo-testnet.org
+const kit = Kit.newKit('https://rc1-forno.celo-testnet.org')
 
 const getAccount = require('./utils/getAccount').getAccount
 
@@ -38,6 +40,11 @@ module.exports = {
         alfajores: {
             provider: kit.web3.currentProvider,
             network_id: 44787
+        },
+
+        mainnet: {
+            provider: kit.web3.currentProvider,
+            network_id: 42220
         },
 
         // this is necessary for coverage
