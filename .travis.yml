@@ -15,7 +15,7 @@ jobs:
 
     - install: yarn
       script:
-        - yarn lint:ts
+        - yarn lint
 
     - language: python
       python: 3.6

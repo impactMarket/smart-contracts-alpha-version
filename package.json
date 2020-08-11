@@ -13,6 +13,8 @@
         "coverage:ci": "CI=true SOLIDITY_COVERAGE=true scripts/test.sh",
         "generate-ts": "truffle compile && typechain --target truffle --outDir types/truffle-contracts './build/contracts/*.json'",
         "lint:ts": "eslint \"test/**/*.ts\"",
+        "lint:sol": "solhint \"./contracts/**/*.sol\"",
+        "lint": "yarn lint:ts && yarn lint:sol",
         "security": "slither . --filter-paths \"@openzeppelin|test|Migrations.sol\" --truffle-version truffle@5.1.29 --exclude-informational --exclude-low",
         "localnet": "ganache-cli --gasLimit 0xfffffffffff --port 8545"
     },
@@ -46,6 +48,7 @@
         "coveralls": "3.0.11",
         "eslint": "7.3.1",
         "eth-gas-reporter": "0.2.17",
+        "solhint": "3.1.0",
         "solidity-coverage": "0.7.1",
         "truffle": "5.1.18",
         "truffle-typings": "1.0.8",
