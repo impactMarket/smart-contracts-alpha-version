@@ -13,6 +13,10 @@ jobs:
       script:
         - yarn coverage:ci
 
+    - install: yarn
+      script:
+        - yarn lint:ts
+
     - language: python
       python: 3.6
       before_install:
