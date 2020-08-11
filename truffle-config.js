@@ -43,6 +43,7 @@ module.exports = {
         },
 
         mainnet: {
+            networkCheckTimeout: 40000,
             provider: kit.web3.currentProvider,
             network_id: 42220
         },
