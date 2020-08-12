@@ -23,13 +23,14 @@ module.exports = async (deployer, network, accounts) => {
         //     data: web3.utils.toHex(message),
         // });
     } else if (network === 'mainnet') {
+        const accountDeploying =process.env.MAINNET_DEPLOY_ADDRESS;
         const cUSDAddress = '0x765de816845861e75a25fca122bb6898b8b1282a';
         await deployer.deploy(ImpactMarket, cUSDAddress, [
             process.env.MAINNET_TEST_WALLET_ADDRESS,
-        ]);
-        const impactMarket = await ImpactMarket.deployed();
-        await deployer.deploy(CommunityFactory, cUSDAddress, impactMarket.address);
-        const communityFactory = await CommunityFactory.deployed();
-        await impactMarket.initCommunityFactory(communityFactory.address);
+        ], { from: accountDeploying});
+        const impactMarket = await ImpactMarket.deployed({ from: accountDeploying});
+        await deployer.deploy(CommunityFactory, cUSDAddress, impactMarket.address, { from: accountDeploying});
+        const communityFactory = await CommunityFactory.deployed({ from: accountDeploying});
+        await impactMarket.initCommunityFactory(communityFactory.address, { from: accountDeploying});
     }
 };
