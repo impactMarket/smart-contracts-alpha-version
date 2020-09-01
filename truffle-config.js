@@ -8,7 +8,7 @@ const path = require('path')
 // Connect to the desired network
 // https://rc1-forno.celo-testnet.org
 // https://alfajores-forno.celo-testnet.org
-const kit = Kit.newKit('https://rc1-forno.celo-testnet.org')
+const kit = Kit.newKit('https://alfajores-forno.celo-testnet.org')
 
 const getAccount = require('./utils/getAccount').getAccount
 
@@ -45,7 +45,9 @@ module.exports = {
         mainnet: {
             networkCheckTimeout: 40000,
             provider: kit.web3.currentProvider,
-            network_id: 42220
+            network_id: 42220,
+            gas: 80000000, // 8M
+            gasPrice: 1000000000, // 1 gwei
         },
 
         // this is necessary for coverage
