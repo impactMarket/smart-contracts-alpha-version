@@ -43,12 +43,12 @@ contract ImpactMarket is AccessControl {
      */
     constructor(address _cUSDAddress, address[] memory _signatures) public {
         require(_signatures.length > 0, "NOT_VALID");
-        _setupRole(ADMIN_ROLE, _signatures[0]);
+        _setupRole(ADMIN_ROLE, address(_signatures[0]));
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         cUSDAddress = _cUSDAddress;
-        signaturesThreshold = _signatures.length - 1;
-        for (uint8 u = 0; u < _signatures.length; u += 1) {
-            grantRole(ADMIN_ROLE, _signatures[u]);
+        signaturesThreshold = _signatures.length;
+        for (uint8 u = 1; u < _signatures.length; u += 1) {
+            _setupRole(ADMIN_ROLE, address(_signatures[u]));
         }
     }
 
