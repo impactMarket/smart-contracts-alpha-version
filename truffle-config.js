@@ -43,10 +43,11 @@ module.exports = {
         },
 
         mainnet: {
-            networkCheckTimeout: 40000,
-            provider: kit.web3.currentProvider,
+            host: '127.0.0.1',
+            port: 8545,
             network_id: 42220,
-            gas: 80000000, // 8M
+            from: '0x4887c4296180aD13524C1e6d19AB9d8a79FE025C',
+            // gas: 80000000, // 8M
             gasPrice: 1000000000, // 1 gwei
         },
 

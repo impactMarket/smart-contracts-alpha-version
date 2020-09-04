@@ -118,3 +118,4 @@ build/
 types/
 .secret*
 coverage.json
+scripts/node/
