@@ -42,10 +42,11 @@ contract ImpactMarket is AccessControl {
      * and add/remove communities.
      */
     constructor(address _cUSDAddress, address[] memory _signatures) public {
-        _setupRole(ADMIN_ROLE, msg.sender);
+        require(_signatures.length > 0, "NOT_VALID");
+        _setupRole(ADMIN_ROLE, _signatures[0]);
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         cUSDAddress = _cUSDAddress;
-        signaturesThreshold = _signatures.length;
+        signaturesThreshold = _signatures.length - 1;
         for (uint8 u = 0; u < _signatures.length; u += 1) {
             grantRole(ADMIN_ROLE, _signatures[u]);
         }
@@ -188,7 +189,6 @@ contract ImpactMarket is AccessControl {
      */
     function initCommunityFactory(address _communityFactory)
         external
-        onlyAdmin
     {
         require(communityFactory == address(0), "");
         communityFactory = _communityFactory;
