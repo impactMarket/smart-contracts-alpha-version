@@ -46,7 +46,11 @@ contract ImpactMarket is AccessControl {
         _setupRole(ADMIN_ROLE, address(_signatures[0]));
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
         cUSDAddress = _cUSDAddress;
-        signaturesThreshold = _signatures.length;
+        if (_signatures.length > 2) {
+            signaturesThreshold = _signatures.length - 1;
+        } else {
+            signaturesThreshold = _signatures.length;
+        }
         for (uint8 u = 1; u < _signatures.length; u += 1) {
             _setupRole(ADMIN_ROLE, address(_signatures[u]));
         }
@@ -193,5 +197,26 @@ contract ImpactMarket is AccessControl {
         require(communityFactory == address(0), "");
         communityFactory = _communityFactory;
         emit CommunityFactoryChanged(_communityFactory);
+    }
+
+    /**
+     * @dev Not allowed.
+     */
+    function grantRole(bytes32, address) public override {
+        revert("NOT_ALLOWED");
+    }
+
+    /**
+     * @dev Not allowed.
+     */
+    function revokeRole(bytes32, address) public override {
+        revert("NOT_ALLOWED");
+    }
+
+    /**
+     * @dev Not allowed.
+     */
+    function renounceRole(bytes32, address) public override {
+        revert("NOT_ALLOWED");
     }
 }
