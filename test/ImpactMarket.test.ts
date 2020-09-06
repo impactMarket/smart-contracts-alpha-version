@@ -23,15 +23,16 @@ BigNumber.config({ EXPONENTIAL_AT: 25 })
 contract('ImpactMarket', async (accounts) => {
     const adminAccount1 = accounts[0];
     const adminAccount2 = accounts[1];
+    const adminAccount3 = accounts[2];
     // community managers
-    const communityManagerA = accounts[2];
-    const communityManagerB = accounts[3];
-    const communityManagerC = accounts[4];
+    const communityManagerA = accounts[3];
+    const communityManagerB = accounts[4];
+    const communityManagerC = accounts[5];
     // beneficiaries
-    const beneficiaryA = accounts[5];
-    const beneficiaryB = accounts[6];
-    const beneficiaryC = accounts[7];
-    const beneficiaryD = accounts[8];
+    const beneficiaryA = accounts[6];
+    const beneficiaryB = accounts[7];
+    const beneficiaryC = accounts[8];
+    const beneficiaryD = accounts[9];
     // contract instances
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
@@ -213,44 +214,13 @@ contract('ImpactMarket', async (accounts) => {
         });
     });
 
-    describe('Community - Governance', () => {
-        beforeEach(async () => {
-            cUSDInstance = await cUSD.new();
-            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [adminAccount1]);
-            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
-            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
-            const tx = await impactMarketInstance.addCommunity(
-                communityManagerA,
-                claimAmountTwo,
-                maxClaimTen,
-                day,
-                hour,
-                { from: adminAccount1 },
-            );
-            const communityAddress = tx.logs[1].args[0];
-            communityInstance = await Community.at(communityAddress);
-        });
-
-        it('should be able to migrate funds from community if manager', async () => {
-            const previousCommunityPreviousBalance = await cUSDInstance.balanceOf(communityInstance.address);
-            const newTx = await impactMarketInstance.migrateCommunity(
-                communityManagerA,
-                communityInstance.address,
-                { from: adminAccount1 },
-            );
-            const newCommunityAddress = newTx.logs[1].args[1];
-            communityInstance = await Community.at(newCommunityAddress);
-            const previousCommunityNewBalance = await cUSDInstance.balanceOf(communityInstance.address);
-            const newCommunityNewBalance = await cUSDInstance.balanceOf(newCommunityAddress);
-            previousCommunityPreviousBalance.toString().should.be.equal(newCommunityNewBalance.toString());
-            previousCommunityNewBalance.toString().should.be.equal('0');
-        });
-
+    describe('Community - Governance (1)', () => {
         it('should not be able to add community if missing signatures', async () => {
             cUSDInstance = await cUSD.new();
             impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [adminAccount1, adminAccount2]);
             communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
-            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount1 });
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 });
             const tx = await impactMarketInstance.addCommunity(
                 communityManagerA,
                 claimAmountTwo,
@@ -260,6 +230,60 @@ contract('ImpactMarket', async (accounts) => {
                 { from: adminAccount1 },
             );
             tx.logs.length.should.be.equal(0);
+        });
+
+        it('should use differente parameters for each community', async () => {
+            cUSDInstance = await cUSD.new();
+            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [adminAccount1, adminAccount2]);
+            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount1 });
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 });
+            let tx = await impactMarketInstance.addCommunity(
+                communityManagerA,
+                claimAmountTwo,
+                maxClaimTen,
+                day,
+                hour,
+                { from: adminAccount1 },
+            );
+            tx.logs.length.should.be.equal(0);
+            tx = await impactMarketInstance.addCommunity(
+                communityManagerA,
+                claimAmountTwo,
+                maxClaimTen,
+                week,
+                hour,
+                { from: adminAccount2 },
+            );
+            tx.logs.length.should.be.equal(0);
+        });
+
+        it('should be able to add community if missing 1 in 3 signatures', async () => {
+            cUSDInstance = await cUSD.new();
+            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [adminAccount1, adminAccount2, adminAccount3]);
+            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount1 });
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 });
+            const tx1 = await impactMarketInstance.addCommunity(
+                communityManagerA,
+                claimAmountTwo,
+                maxClaimTen,
+                day,
+                hour,
+                { from: adminAccount1 },
+            );
+            tx1.logs.length.should.be.equal(0);
+            const tx2 = await impactMarketInstance.addCommunity(
+                communityManagerA,
+                claimAmountTwo,
+                maxClaimTen,
+                day,
+                hour,
+                { from: adminAccount2 },
+            );
+            const communityAddress = tx2.logs[1].args[0];
+            communityInstance = await Community.at(communityAddress);
+            (await communityInstance.claimAmount()).toString().should.be.equal(claimAmountTwo.toString());
         });
 
         it('should be signined by the two admins', async () => {
@@ -313,6 +337,72 @@ contract('ImpactMarket', async (accounts) => {
                 ),
                 'SIGNED'
             );
+        });
+    });
+    describe('Community - Governance (2)', () => {
+        beforeEach(async () => {
+            cUSDInstance = await cUSD.new();
+            impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [adminAccount1]);
+            communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
+            await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
+            const tx = await impactMarketInstance.addCommunity(
+                communityManagerA,
+                claimAmountTwo,
+                maxClaimTen,
+                day,
+                hour,
+                { from: adminAccount1 },
+            );
+            const communityAddress = tx.logs[1].args[0];
+            communityInstance = await Community.at(communityAddress);
+        });
+
+        it('should not be able to grantRole', async () => {
+            await expectRevert(
+                impactMarketInstance.grantRole(
+                    await impactMarketInstance.ADMIN_ROLE(),
+                    adminAccount2,
+                    { from: adminAccount1 },
+                ),
+                'NOT_ALLOWED'
+            );
+        });
+
+        it('should not be able to revokeRole', async () => {
+            await expectRevert(
+                impactMarketInstance.revokeRole(
+                    await impactMarketInstance.ADMIN_ROLE(),
+                    adminAccount1,
+                    { from: adminAccount1 },
+                ),
+                'NOT_ALLOWED'
+            );
+        });
+
+        it('should not be able to renounceRole', async () => {
+            await expectRevert(
+                impactMarketInstance.renounceRole(
+                    await impactMarketInstance.ADMIN_ROLE(),
+                    adminAccount1,
+                    { from: adminAccount1 },
+                ),
+                'NOT_ALLOWED'
+            );
+        });
+
+        it('should be able to migrate funds from community if manager', async () => {
+            const previousCommunityPreviousBalance = await cUSDInstance.balanceOf(communityInstance.address);
+            const newTx = await impactMarketInstance.migrateCommunity(
+                communityManagerA,
+                communityInstance.address,
+                { from: adminAccount1 },
+            );
+            const newCommunityAddress = newTx.logs[1].args[1];
+            communityInstance = await Community.at(newCommunityAddress);
+            const previousCommunityNewBalance = await cUSDInstance.balanceOf(communityInstance.address);
+            const newCommunityNewBalance = await cUSDInstance.balanceOf(newCommunityAddress);
+            previousCommunityPreviousBalance.toString().should.be.equal(newCommunityNewBalance.toString());
+            previousCommunityNewBalance.toString().should.be.equal('0');
         });
 
         it('should not be able toset factory from invalid impactMarket contract', async () => {
