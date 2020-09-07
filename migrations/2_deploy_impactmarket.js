@@ -7,8 +7,6 @@ module.exports = (deployer, network, accounts) => {
     if (network === 'alfajores') {
         const cUSDAddress = process.env.CUSD_ALFAJORES_ADDRESS;
         deployer.deploy(ImpactMarket, cUSDAddress, [
-            process.env.MARCO_STAGING_WALLET_ADDRESS,
-            process.env.AFONSO_STAGING_WALLET_ADDRESS,
             process.env.BERNARDO_STAGING_WALLET_ADDRESS,
         ]);
         deployer.then(async () => {
