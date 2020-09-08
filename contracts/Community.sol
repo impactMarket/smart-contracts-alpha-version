@@ -135,6 +135,9 @@ contract Community is AccessControl {
         // solhint-disable-next-line not-rely-on-time
         cooldown[_account] = block.timestamp;
         lastInterval[_account] = uint256(baseInterval - incrementInterval);
+        // send 5 cents when adding a new beneficiary
+        bool success = IERC20(cUSDAddress).transfer(_account, 50000000000000000);
+        require(success, "NOT_ALLOWED");
         emit BeneficiaryAdded(_account);
     }
 
