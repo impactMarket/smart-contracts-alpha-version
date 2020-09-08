@@ -129,7 +129,8 @@ contract ImpactMarket is AccessControl {
      */
     function migrateCommunity(
         address _firstManager,
-        address _previousCommunityAddress
+        address _previousCommunityAddress,
+        address _newCommunityFactory
     )
         external
         onlyAdmin
@@ -139,9 +140,9 @@ contract ImpactMarket is AccessControl {
         )
     {
         communities[_previousCommunityAddress] = false;
+        require(address(_previousCommunityAddress) != address(0), "NOT_VALID");
         ICommunity previousCommunity = ICommunity(_previousCommunityAddress);
-        require(address(previousCommunity) != address(0), "NOT_VALID");
-        address community = ICommunityFactory(communityFactory).deployCommunity(
+        address community = ICommunityFactory(_newCommunityFactory).deployCommunity(
             _firstManager,
             previousCommunity.claimAmount(),
             previousCommunity.maxClaim(),

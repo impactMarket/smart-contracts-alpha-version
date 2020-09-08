@@ -46,6 +46,7 @@ contract('ImpactMarket', async (accounts) => {
     // const month = time.duration.days(30);
     const claimAmountTwo = new BigNumber('2').multipliedBy(decimals);
     const maxClaimTen = new BigNumber('10').multipliedBy(decimals);
+    const fiveCents = new BigNumber('50000000000000000');
 
     describe('Community - Beneficiary', () => {
         beforeEach(async () => {
@@ -63,12 +64,21 @@ contract('ImpactMarket', async (accounts) => {
             );
             const communityManagerAddress = tx.logs[1].args[0];
             communityInstance = await Community.at(communityManagerAddress);
+            await cUSDInstance.testFakeFundAddress(communityManagerAddress, { from: adminAccount1 });
         });
 
         it('should be able to add beneficiary to community', async () => {
             (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.NONE);
             await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });
             (await communityInstance.beneficiaries(beneficiaryA)).toString().should.be.equal(BeneficiaryState.Valid);
+        });
+
+        it('should give beneficiary 5 cents when adding to community', async () => {
+            (await cUSDInstance.balanceOf(beneficiaryA)).toString()
+                .should.be.equal('0');
+            await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });
+            (await cUSDInstance.balanceOf(beneficiaryA)).toString()
+                .should.be.equal(fiveCents.toString());
         });
 
         it('should be able to lock beneficiary from community', async () => {
@@ -193,7 +203,7 @@ contract('ImpactMarket', async (accounts) => {
             await time.increase(time.duration.seconds(baseInterval + 5));
             await communityInstance.claim({ from: beneficiaryA });
             (await cUSDInstance.balanceOf(beneficiaryA)).toString()
-                .should.be.equal(claimAmountTwo.toString());
+                .should.be.equal(claimAmountTwo.plus(fiveCents).toString());
         });
 
         it('should not claim after max claim', async () => {
@@ -390,11 +400,13 @@ contract('ImpactMarket', async (accounts) => {
             );
         });
 
-        it('should be able to migrate funds from community if manager', async () => {
+        it('should be able to migrate funds from community if impactMarket admin', async () => {
             const previousCommunityPreviousBalance = await cUSDInstance.balanceOf(communityInstance.address);
+            const newCommunityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
             const newTx = await impactMarketInstance.migrateCommunity(
                 communityManagerA,
                 communityInstance.address,
+                newCommunityFactoryInstance.address,
                 { from: adminAccount1 },
             );
             const newCommunityAddress = newTx.logs[1].args[1];
@@ -414,10 +426,12 @@ contract('ImpactMarket', async (accounts) => {
         });
 
         it('should not be able to migrate from invalid community', async () => {
+            const newCommunityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
             await expectRevert(
                 impactMarketInstance.migrateCommunity(
                     communityManagerA,
                     constants.ZERO_ADDRESS,
+                    newCommunityFactoryInstance.address,
                     { from: adminAccount1 },
                 ),
                 'NOT_VALID'
@@ -425,10 +439,12 @@ contract('ImpactMarket', async (accounts) => {
         });
 
         it('should not be able to migrate community if not admin', async () => {
+            const newCommunityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
             await expectRevert(
                 impactMarketInstance.migrateCommunity(
                     communityManagerA,
                     cUSDInstance.address, // wrong on purpose
+                    newCommunityFactoryInstance.address,
                     { from: adminAccount2 },
                 ),
                 'NOT_ADMIN'
@@ -701,7 +717,7 @@ contract('ImpactMarket', async (accounts) => {
             );
             const currentCommunityBalance = new BigNumber((await cUSDInstance.balanceOf(communityInstanceA.address)).toString());
             previousCommunityBalance.minus(currentCommunityBalance).toString().should.be
-                .equal(new BigNumber(claimAmount * (5 + maxClaimsPerUser)).multipliedBy(decimals).toString());
+                .equal(new BigNumber(claimAmount * (5 + maxClaimsPerUser)).multipliedBy(decimals).plus(4 * fiveCents.toNumber()).toString());
         });
 
         it('many beneficiaries to many communities', async () => {
@@ -765,10 +781,10 @@ contract('ImpactMarket', async (accounts) => {
             // balances
             const currentCommunityBalanceA = new BigNumber((await cUSDInstance.balanceOf(communityInstanceA.address)).toString());
             previousCommunityBalanceA.minus(currentCommunityBalanceA).toString().should.be
-                .equal(new BigNumber(claimAmountA * (3 + maxClaimsPerUserA)).multipliedBy(decimals).toString());
+                .equal(new BigNumber(claimAmountA * (3 + maxClaimsPerUserA)).multipliedBy(decimals).plus(2 * fiveCents.toNumber()).toString());
             const currentCommunityBalanceB = new BigNumber((await cUSDInstance.balanceOf(communityInstanceB.address)).toString());
             previousCommunityBalanceB.minus(currentCommunityBalanceB).toString().should.be
-                .equal(new BigNumber(claimAmountB * (4 + maxClaimsPerUserB)).multipliedBy(decimals).toString());
+                .equal(new BigNumber(claimAmountB * (4 + maxClaimsPerUserB)).multipliedBy(decimals).plus(2 * fiveCents.toNumber()).toString());
         });
     });
 });
