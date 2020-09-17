@@ -160,7 +160,7 @@ contract Community is AccessControl {
     }
 
     /**
-     * @dev Allow community managers to add beneficiaries.
+     * @dev Allow community managers to remove beneficiaries.
      */
     function removeBeneficiary(address _account) external onlyManagers {
         beneficiaries[_account] = BeneficiaryState.Removed;
@@ -212,7 +212,7 @@ contract Community is AccessControl {
     }
 
     /**
-     * Allow community managers to lock community claims.
+     * @dev Allow community managers to lock community claims.
      */
     function lock() external onlyManagers {
         locked = true;
@@ -220,7 +220,7 @@ contract Community is AccessControl {
     }
 
     /**
-     * Allow community managers to unlock community claims.
+     * @dev Allow community managers to unlock community claims.
      */
     function unlock() external onlyManagers {
         locked = false;
@@ -228,7 +228,7 @@ contract Community is AccessControl {
     }
 
     /**
-     * Migrate funds in current community to new one.
+     * @dev Migrate funds in current community to new one.
      */
     function migrateFunds(address _newCommunity, address _newCommunityManager)
         external
