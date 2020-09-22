@@ -19,7 +19,8 @@ module.exports = (deployer, network, accounts) => {
         // const message = 'Job losses in April likely topped 20 million and the unemployment rate hit a post-World War II high';
         // web3.eth.sendTransaction({
         //     from: accounts[0],
-        //     gas: 188483,
+        //     to: accounts[0],
+        //     value: 1,
         //     data: web3.utils.toHex(message),
         // });
     } else if (network === 'mainnet') {
