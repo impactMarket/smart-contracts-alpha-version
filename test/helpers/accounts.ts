@@ -1,4 +1,3 @@
-
 export function defineAccounts(accounts: string[]) {
     const adminAccount1 = accounts[0];
     const adminAccount2 = accounts[1];
@@ -26,5 +25,5 @@ export function defineAccounts(accounts: string[]) {
         beneficiaryB,
         beneficiaryC,
         beneficiaryD,
-    }
+    };
 }

@@ -1,6 +1,16 @@
 import { should } from 'chai';
-import { ImpactMarketInstance, CommunityInstance, CUsdInstance, CommunityFactoryInstance } from '../../../types/contracts/truffle';
-import { ImpactMarket, Community, CommunityFactory, cUSD } from '../../helpers/contracts';
+import {
+    ImpactMarketInstance,
+    CommunityInstance,
+    CUsdInstance,
+    CommunityFactoryInstance,
+} from '../../../types/contracts/truffle';
+import {
+    ImpactMarket,
+    Community,
+    CommunityFactory,
+    cUSD,
+} from '../../helpers/contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
     hour,
@@ -12,13 +22,9 @@ import {
 const { expectRevert } = require('@openzeppelin/test-helpers');
 should();
 
-
 /** @test {Community} contract */
 contract('ImpactMarket - Basic', async (accounts) => {
-    const {
-        adminAccount1,
-        communityManagerA,
-    } = defineAccounts(accounts);
+    const { adminAccount1, communityManagerA } = defineAccounts(accounts);
     // contract instances
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
@@ -27,9 +33,16 @@ contract('ImpactMarket - Basic', async (accounts) => {
 
     beforeEach(async () => {
         cUSDInstance = await cUSD.new();
-        impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [adminAccount1]);
-        communityFactoryInstance = await CommunityFactory.new(cUSDInstance.address, impactMarketInstance.address);
-        await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
+        impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [
+            adminAccount1,
+        ]);
+        communityFactoryInstance = await CommunityFactory.new(
+            cUSDInstance.address,
+            impactMarketInstance.address
+        );
+        await impactMarketInstance.setCommunityFactory(
+            communityFactoryInstance.address
+        );
     });
 
     it('should be able to add a community if admin', async () => {
@@ -39,19 +52,22 @@ contract('ImpactMarket - Basic', async (accounts) => {
             maxClaimTen.toString(),
             day,
             hour,
-            { from: adminAccount1 },
+            { from: adminAccount1 }
         );
         const communityManagerAddress = tx.logs[2].args[0];
         communityInstance = await Community.at(communityManagerAddress);
-        (await communityInstance.claimAmount()).toString().should.be.equal(
-            claimAmountTwo.toString()
-        );
-        (await communityInstance.baseInterval()).toString().should.be.equal('86400');
-        (await communityInstance.incrementInterval()).toString().should.be.equal('3600');
-        (await communityInstance.maxClaim()).toString().should.be.equal(
-            maxClaimTen.toString()
-        );
-
+        (await communityInstance.claimAmount())
+            .toString()
+            .should.be.equal(claimAmountTwo.toString());
+        (await communityInstance.baseInterval())
+            .toString()
+            .should.be.equal('86400');
+        (await communityInstance.incrementInterval())
+            .toString()
+            .should.be.equal('3600');
+        (await communityInstance.maxClaim())
+            .toString()
+            .should.be.equal(maxClaimTen.toString());
     });
 
     it('should be able to remove a community if admin', async () => {
@@ -61,10 +77,12 @@ contract('ImpactMarket - Basic', async (accounts) => {
             maxClaimTen.toString(),
             day,
             hour,
-            { from: adminAccount1 },
+            { from: adminAccount1 }
         );
         const communityManagerAddress = tx.logs[2].args[0];
-        await impactMarketInstance.removeCommunity(communityManagerAddress, { from: adminAccount1 });
+        await impactMarketInstance.removeCommunity(communityManagerAddress, {
+            from: adminAccount1,
+        });
     });
 
     it('should not be able to create a community with invalid values', async () => {
@@ -75,7 +93,7 @@ contract('ImpactMarket - Basic', async (accounts) => {
                 maxClaimTen.toString(),
                 hour,
                 day,
-                { from: adminAccount1 },
+                { from: adminAccount1 }
             )
         );
         await expectRevert.unspecified(
@@ -85,7 +103,7 @@ contract('ImpactMarket - Basic', async (accounts) => {
                 claimAmountTwo.toString(),
                 day,
                 hour,
-                { from: adminAccount1 },
+                { from: adminAccount1 }
             )
         );
     });

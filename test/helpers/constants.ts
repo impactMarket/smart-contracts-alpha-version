@@ -1,7 +1,6 @@
 import BigNumber from 'bignumber.js';
 const { time } = require('@openzeppelin/test-helpers');
 
-
 // constants
 const decimals = new BigNumber(10).pow(18);
 const hour = time.duration.hours(1);
@@ -12,12 +11,4 @@ const claimAmountTwo = new BigNumber('2').multipliedBy(decimals);
 const maxClaimTen = new BigNumber('10').multipliedBy(decimals);
 const fiveCents = new BigNumber('50000000000000000');
 
-export {
-    decimals,
-    hour,
-    day,
-    week,
-    claimAmountTwo,
-    maxClaimTen,
-    fiveCents
-}
+export { decimals, hour, day, week, claimAmountTwo, maxClaimTen, fiveCents };
