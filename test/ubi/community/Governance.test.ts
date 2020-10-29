@@ -1,5 +1,5 @@
 import { should } from 'chai';
-import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../../../types/truffle-contracts';
+import { ImpactMarketInstance, CommunityInstance, CUsdInstance, CommunityFactoryInstance } from '../../../types/contracts/truffle';
 import { ImpactMarket, Community, CommunityFactory, cUSD } from '../../helpers/contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
@@ -27,7 +27,7 @@ contract('Community - Governance', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: cUSDInstance;
+    let cUSDInstance: CUsdInstance;
 
     beforeEach(async () => {
         cUSDInstance = await cUSD.new();
@@ -36,13 +36,13 @@ contract('Community - Governance', async (accounts) => {
         await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
         const tx = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
         );
-        const communityAddress = tx.logs[1].args[0];
+        const communityAddress = tx.logs[2].args[0];
         communityInstance = await Community.at(communityAddress);
     });
 
@@ -88,7 +88,7 @@ contract('Community - Governance', async (accounts) => {
             newCommunityFactoryInstance.address,
             { from: adminAccount1 },
         );
-        const newCommunityAddress = newTx.logs[1].args[1];
+        const newCommunityAddress = newTx.logs[2].args[1];
         communityInstance = await Community.at(newCommunityAddress);
         const previousCommunityNewBalance = await cUSDInstance.balanceOf(communityInstance.address);
         const newCommunityNewBalance = await cUSDInstance.balanceOf(newCommunityAddress);
@@ -133,8 +133,8 @@ contract('Community - Governance', async (accounts) => {
     it('should be able edit community if manager', async () => {
         (await communityInstance.incrementInterval()).toString().should.be.equal(hour.toString());
         await communityInstance.edit(
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             week,
             day,
             { from: communityManagerA }
@@ -145,8 +145,8 @@ contract('Community - Governance', async (accounts) => {
     it('should not be able edit community if not manager', async () => {
         await expectRevert(
             communityInstance.edit(
-                claimAmountTwo,
-                maxClaimTen,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
                 day,
                 day,
                 { from: communityManagerB }
@@ -158,8 +158,8 @@ contract('Community - Governance', async (accounts) => {
     it('should not be able edit community with invalid values', async () => {
         await expectRevert.unspecified(
             communityInstance.edit(
-                claimAmountTwo,
-                maxClaimTen,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
                 day,
                 week,
                 { from: communityManagerA }
@@ -167,8 +167,8 @@ contract('Community - Governance', async (accounts) => {
         );
         await expectRevert.unspecified(
             communityInstance.edit(
-                maxClaimTen, // supposed to be wrong
-                claimAmountTwo,
+                maxClaimTen.toString(), // supposed to be wrong
+                claimAmountTwo.toString(),
                 week,
                 day,
                 { from: communityManagerA }

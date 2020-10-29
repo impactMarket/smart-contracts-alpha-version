@@ -1,5 +1,5 @@
 import { should } from 'chai';
-import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../../../types/truffle-contracts';
+import { ImpactMarketInstance, CommunityInstance, CUsdInstance, CommunityFactoryInstance } from '../../../types/contracts/truffle';
 import { ImpactMarket, Community, CommunityFactory, cUSD } from '../../helpers/contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
@@ -26,7 +26,7 @@ contract('ImpactMarket - Governance', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: cUSDInstance;
+    let cUSDInstance: CUsdInstance;
 
     it('should not be able to add community if missing signatures', async () => {
         cUSDInstance = await cUSD.new();
@@ -36,8 +36,8 @@ contract('ImpactMarket - Governance', async (accounts) => {
         await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 });
         const tx = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
@@ -53,8 +53,8 @@ contract('ImpactMarket - Governance', async (accounts) => {
         await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 });
         let tx = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
@@ -62,8 +62,8 @@ contract('ImpactMarket - Governance', async (accounts) => {
         tx.logs.length.should.be.equal(0);
         tx = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             week,
             hour,
             { from: adminAccount2 },
@@ -79,8 +79,8 @@ contract('ImpactMarket - Governance', async (accounts) => {
         await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 });
         const tx1 = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
@@ -88,13 +88,13 @@ contract('ImpactMarket - Governance', async (accounts) => {
         tx1.logs.length.should.be.equal(0);
         const tx2 = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount2 },
         );
-        const communityAddress = tx2.logs[1].args[0];
+        const communityAddress = tx2.logs[2].args[0];
         communityInstance = await Community.at(communityAddress);
         (await communityInstance.claimAmount()).toString().should.be.equal(claimAmountTwo.toString());
     });
@@ -107,21 +107,21 @@ contract('ImpactMarket - Governance', async (accounts) => {
         await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address, { from: adminAccount2 });
         await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
         );
         const tx = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount2 },
         );
-        const communityAddress = tx.logs[1].args[0];
+        const communityAddress = tx.logs[2].args[0];
         communityInstance = await Community.at(communityAddress);
         (await communityInstance.claimAmount()).toString().should.be.equal(claimAmountTwo.toString());
     });
@@ -133,8 +133,8 @@ contract('ImpactMarket - Governance', async (accounts) => {
         await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
         await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
@@ -142,8 +142,8 @@ contract('ImpactMarket - Governance', async (accounts) => {
         await expectRevert(
             impactMarketInstance.addCommunity(
                 communityManagerA,
-                claimAmountTwo,
-                maxClaimTen,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
                 day,
                 hour,
                 { from: adminAccount1 },

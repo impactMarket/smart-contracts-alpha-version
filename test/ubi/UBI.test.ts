@@ -1,6 +1,6 @@
 import { should } from 'chai';
 import BigNumber from 'bignumber.js';
-import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../../types/truffle-contracts';
+import { ImpactMarketInstance, CommunityInstance, CUsdInstance, CommunityFactoryInstance } from '../../types/contracts/truffle';
 import { ImpactMarket, Community, CommunityFactory, cUSD } from '../helpers/contracts';
 import { defineAccounts } from '../helpers/accounts';
 import {
@@ -11,7 +11,7 @@ import {
     maxClaimTen,
     fiveCents
 } from '../helpers/constants';
-import { BeneficiaryState } from '../helpers/utils';
+import { BeneficiaryState, BNtoBigNumber } from '../helpers/utils';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert, time, } = require('@openzeppelin/test-helpers');
 should();
@@ -32,21 +32,21 @@ contract('Chaos test (complete flow)', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: cUSDInstance;
+    let cUSDInstance: CUsdInstance;
 
 
     // add community
     const addCommunity = async (communityManager: string): Promise<CommunityInstance> => {
         const tx = await impactMarketInstance.addCommunity(
             communityManager,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
         );
         // eslint-disable-next-line prefer-const
-        const communityManagerAddress = tx.logs[1].args[0] as string;
+        const communityManagerAddress = tx.logs[2].args[0] as string;
         const instance = await Community.at(communityManagerAddress);
         await cUSDInstance.testFakeFundAddress(communityManagerAddress, { from: adminAccount1 });
         return instance;
@@ -68,14 +68,14 @@ contract('Chaos test (complete flow)', async (accounts) => {
     }
     // claim
     const beneficiaryClaim = async (instance: CommunityInstance, beneficiaryAddress: string): Promise<void> => {
-        const previousBalance = new BigNumber(await cUSDInstance.balanceOf(beneficiaryAddress));
-        const previousLastInterval = new BigNumber(await instance.lastInterval(beneficiaryAddress));
+        const previousBalance = BNtoBigNumber(await cUSDInstance.balanceOf(beneficiaryAddress));
+        const previousLastInterval = BNtoBigNumber(await instance.lastInterval(beneficiaryAddress));
         await instance.claim({ from: beneficiaryAddress });
-        const currentBalance = new BigNumber(await cUSDInstance.balanceOf(beneficiaryAddress));
-        const currentLastInterval = new BigNumber(await instance.lastInterval(beneficiaryAddress));
-        previousBalance.plus(await instance.claimAmount()).toString()
+        const currentBalance = BNtoBigNumber(await cUSDInstance.balanceOf(beneficiaryAddress));
+        const currentLastInterval = BNtoBigNumber(await instance.lastInterval(beneficiaryAddress));
+        previousBalance.plus(BNtoBigNumber(await instance.claimAmount())).toString()
             .should.be.equal(currentBalance.toString());
-        previousLastInterval.plus(await instance.incrementInterval()).toString()
+        previousLastInterval.plus(BNtoBigNumber(await instance.incrementInterval())).toString()
             .should.be.equal(currentLastInterval.toString());
     }
 

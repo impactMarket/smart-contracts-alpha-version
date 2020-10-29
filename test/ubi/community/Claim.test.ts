@@ -1,6 +1,6 @@
 import { should } from 'chai';
 import BigNumber from 'bignumber.js';
-import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../../../types/truffle-contracts';
+import { ImpactMarketInstance, CommunityInstance, CUsdInstance, CommunityFactoryInstance } from '../../../types/contracts/truffle';
 import { ImpactMarket, Community, CommunityFactory, cUSD } from '../../helpers/contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
@@ -28,7 +28,7 @@ contract('Community - Claim', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: cUSDInstance;
+    let cUSDInstance: CUsdInstance;
 
     beforeEach(async () => {
         cUSDInstance = await cUSD.new();
@@ -37,13 +37,13 @@ contract('Community - Claim', async (accounts) => {
         await impactMarketInstance.setCommunityFactory(communityFactoryInstance.address);
         const tx = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
         );
-        const communityManagerAddress = tx.logs[1].args[0];
+        const communityManagerAddress = tx.logs[2].args[0];
         communityInstance = await Community.at(communityManagerAddress);
         await cUSDInstance.testFakeFundAddress(communityManagerAddress, { from: adminAccount1 });
         await communityInstance.addBeneficiary(beneficiaryA, { from: communityManagerA });

@@ -1,5 +1,5 @@
 import { should } from 'chai';
-import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../../../types/truffle-contracts';
+import { ImpactMarketInstance, CommunityInstance, CUsdInstance, CommunityFactoryInstance } from '../../../types/contracts/truffle';
 import { ImpactMarket, Community, CommunityFactory, cUSD } from '../../helpers/contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
@@ -23,7 +23,7 @@ contract('ImpactMarket - Basic', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: cUSDInstance;
+    let cUSDInstance: CUsdInstance;
 
     beforeEach(async () => {
         cUSDInstance = await cUSD.new();
@@ -35,13 +35,13 @@ contract('ImpactMarket - Basic', async (accounts) => {
     it('should be able to add a community if admin', async () => {
         const tx = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
         );
-        const communityManagerAddress = tx.logs[1].args[0];
+        const communityManagerAddress = tx.logs[2].args[0];
         communityInstance = await Community.at(communityManagerAddress);
         (await communityInstance.claimAmount()).toString().should.be.equal(
             claimAmountTwo.toString()
@@ -57,13 +57,13 @@ contract('ImpactMarket - Basic', async (accounts) => {
     it('should be able to remove a community if admin', async () => {
         const tx = await impactMarketInstance.addCommunity(
             communityManagerA,
-            claimAmountTwo,
-            maxClaimTen,
+            claimAmountTwo.toString(),
+            maxClaimTen.toString(),
             day,
             hour,
             { from: adminAccount1 },
         );
-        const communityManagerAddress = tx.logs[1].args[0];
+        const communityManagerAddress = tx.logs[2].args[0];
         await impactMarketInstance.removeCommunity(communityManagerAddress, { from: adminAccount1 });
     });
 
@@ -71,8 +71,8 @@ contract('ImpactMarket - Basic', async (accounts) => {
         await expectRevert.unspecified(
             impactMarketInstance.addCommunity(
                 communityManagerA,
-                claimAmountTwo,
-                maxClaimTen,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
                 hour,
                 day,
                 { from: adminAccount1 },
@@ -81,8 +81,8 @@ contract('ImpactMarket - Basic', async (accounts) => {
         await expectRevert.unspecified(
             impactMarketInstance.addCommunity(
                 communityManagerA,
-                maxClaimTen, // it's supposed to be wrong!
-                claimAmountTwo,
+                maxClaimTen.toString(), // it's supposed to be wrong!
+                claimAmountTwo.toString(),
                 day,
                 hour,
                 { from: adminAccount1 },
