@@ -1,14 +1,21 @@
 import { should } from 'chai';
-import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../types/truffle-contracts';
 import BigNumber from 'bignumber.js';
+import { ImpactMarketInstance, CommunityInstance, cUSDInstance, CommunityFactoryInstance } from '../types/truffle-contracts';
+import { ImpactMarket, Community, CommunityFactory, cUSD } from './helpers/contracts';
+import { defineAccounts } from './helpers/accounts';
+import {
+    decimals,
+    hour,
+    day,
+    week,
+    claimAmountTwo,
+    maxClaimTen,
+    fiveCents
+} from './helpers/constants';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert, expectEvent, time, constants } = require('@openzeppelin/test-helpers');
 
 
-const ImpactMarket = artifacts.require('./ImpactMarket.sol') as Truffle.Contract<ImpactMarketInstance>;
-const Community = artifacts.require('./Community.sol') as Truffle.Contract<CommunityInstance>;
-const CommunityFactory = artifacts.require('./CommunityFactory.sol') as Truffle.Contract<CommunityFactoryInstance>;
-const cUSD = artifacts.require('./test/cUSD.sol') as Truffle.Contract<cUSDInstance>;
 should();
 enum BeneficiaryState {
     NONE = '0',
@@ -18,35 +25,28 @@ enum BeneficiaryState {
 }
 
 
-BigNumber.config({ EXPONENTIAL_AT: 25 })
+BigNumber.config({ EXPONENTIAL_AT: 25 });
 /** @test {ImpactMarket} contract */
 contract('ImpactMarket', async (accounts) => {
-    const adminAccount1 = accounts[0];
-    const adminAccount2 = accounts[1];
-    const adminAccount3 = accounts[2];
-    // community managers
-    const communityManagerA = accounts[3];
-    const communityManagerB = accounts[4];
-    const communityManagerC = accounts[5];
-    // beneficiaries
-    const beneficiaryA = accounts[6];
-    const beneficiaryB = accounts[7];
-    const beneficiaryC = accounts[8];
-    const beneficiaryD = accounts[9];
+    const {
+        adminAccount1,
+        adminAccount2,
+        adminAccount3,
+        // community managers
+        communityManagerA,
+        communityManagerB,
+        communityManagerC,
+        // beneficiaries
+        beneficiaryA,
+        beneficiaryB,
+        beneficiaryC,
+        beneficiaryD,
+    } = defineAccounts(accounts);
     // contract instances
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
     let cUSDInstance: cUSDInstance;
-    // constants
-    const decimals = new BigNumber(10).pow(18);
-    const hour = time.duration.hours(1);
-    const day = time.duration.days(1);
-    const week = time.duration.weeks(1);
-    // const month = time.duration.days(30);
-    const claimAmountTwo = new BigNumber('2').multipliedBy(decimals);
-    const maxClaimTen = new BigNumber('10').multipliedBy(decimals);
-    const fiveCents = new BigNumber('50000000000000000');
 
     describe('Community - Beneficiary', () => {
         beforeEach(async () => {
