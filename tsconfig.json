@@ -4,6 +4,8 @@
         "module": "commonjs",
         "strict": true,
         "moduleResolution": "node",
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
         "noImplicitThis": true,
         "alwaysStrict": true,
         "experimentalDecorators": true,
