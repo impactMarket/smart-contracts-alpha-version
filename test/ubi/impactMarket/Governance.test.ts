@@ -1,16 +1,11 @@
 import { should } from 'chai';
+
 import {
     ImpactMarketInstance,
     CommunityInstance,
     CUsdInstance,
     CommunityFactoryInstance,
 } from '../../../types/contracts/truffle';
-import {
-    ImpactMarket,
-    Community,
-    CommunityFactory,
-    cUSD,
-} from '../../helpers/contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
     hour,
@@ -19,6 +14,13 @@ import {
     claimAmountTwo,
     maxClaimTen,
 } from '../../helpers/constants';
+import {
+    ImpactMarket,
+    Community,
+    CommunityFactory,
+    cUSD,
+} from '../../helpers/contracts';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert } = require('@openzeppelin/test-helpers');
 should();

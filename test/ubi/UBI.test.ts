@@ -1,17 +1,12 @@
-import { should } from 'chai';
 import BigNumber from 'bignumber.js';
+import { should } from 'chai';
+
 import {
     ImpactMarketInstance,
     CommunityInstance,
     CUsdInstance,
     CommunityFactoryInstance,
 } from '../../types/contracts/truffle';
-import {
-    ImpactMarket,
-    Community,
-    CommunityFactory,
-    cUSD,
-} from '../helpers/contracts';
 import { defineAccounts } from '../helpers/accounts';
 import {
     decimals,
@@ -21,7 +16,14 @@ import {
     maxClaimTen,
     fiveCents,
 } from '../helpers/constants';
+import {
+    ImpactMarket,
+    Community,
+    CommunityFactory,
+    cUSD,
+} from '../helpers/contracts';
 import { BeneficiaryState, BNtoBigNumber } from '../helpers/utils';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 should();
@@ -39,7 +41,7 @@ contract('Chaos test (complete flow)', async (accounts) => {
     } = defineAccounts(accounts);
     // contract instances
     let impactMarketInstance: ImpactMarketInstance;
-    let communityInstance: CommunityInstance;
+    // let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
     let cUSDInstance: CUsdInstance;
 

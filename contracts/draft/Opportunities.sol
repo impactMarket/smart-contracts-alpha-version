@@ -81,12 +81,12 @@ contract Opportunities {
         );
     }
 
-    function remove() public {
-        //
-    }
+    // function remove() public {
+    //     //
+    // }
 
     function fund(uint256 _id, uint256 _amount) public {
-        Opportunity memory opportunity = opportunities[_id];
+        // Opportunity memory opportunity = opportunities[_id];
         // TODO: calculate new pricePerUnit
         // TODO: tranfer cUSD using _amount
         emit FundOpportunity(_id, _amount);
