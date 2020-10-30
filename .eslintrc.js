@@ -1,7 +1,7 @@
 // .eslintrc.js
 module.exports = {
     extends: [
-        "universe/native",
+        "universe/node",
         "prettier",
         "prettier/@typescript-eslint"
     ]

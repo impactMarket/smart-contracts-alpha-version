@@ -1,6 +1,7 @@
 module.exports = {
     skipFiles: [
-        'test/',
-        'interfaces/',
+        'ubi/test/',
+        'ubi/interfaces/',
+        'draft/',
     ]
 }
