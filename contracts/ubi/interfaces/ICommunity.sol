@@ -2,6 +2,11 @@
 pragma solidity ^0.6.0;
 
 interface ICommunity {
+    function cooldown(address beneficiary) external view returns(uint256);
+    function lastInterval(address beneficiary) external view returns(uint256);
+    function claimed(address beneficiary) external view returns(uint256);
+    function beneficiaries(address beneficiary) external view returns(uint256);
+
     function claimAmount() external view returns(uint256);
     function baseInterval() external view returns(uint256);
     function incrementInterval() external view returns(uint256);

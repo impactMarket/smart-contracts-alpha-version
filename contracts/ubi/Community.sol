@@ -131,6 +131,7 @@ contract Community is AccessControl {
      * @dev Allow community managers to add beneficiaries.
      */
     function addBeneficiary(address _account) external onlyManagers {
+        require(beneficiaries[_account] != BeneficiaryState.Valid, "NOT_ALLOWED");
         beneficiaries[_account] = BeneficiaryState.Valid;
         // solhint-disable-next-line not-rely-on-time
         cooldown[_account] = block.timestamp;
@@ -247,5 +248,13 @@ contract Community is AccessControl {
         bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);
         require(success, "NOT_ALLOWED");
         emit MigratedFunds(_newCommunity, balance);
+    }
+
+    function joinFromMigratedCommunity() public {
+        cooldown[msg.sender] = ICommunity(previousCommunityContract).cooldown(msg.sender);
+        lastInterval[msg.sender] = ICommunity(previousCommunityContract).lastInterval(msg.sender);
+        claimed[msg.sender] = ICommunity(previousCommunityContract).claimed(msg.sender);
+        // no need to check if it's a beneficiary, as the state is copied
+        beneficiaries[msg.sender] = BeneficiaryState(ICommunity(previousCommunityContract).beneficiaries(msg.sender));
     }
 }
