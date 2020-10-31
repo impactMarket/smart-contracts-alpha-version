@@ -250,7 +250,7 @@ contract Community is AccessControl {
         emit MigratedFunds(_newCommunity, balance);
     }
 
-    function joinFromMigratedCommunity() public {
+    function joinFromMigratedCommunity() external {
         cooldown[msg.sender] = ICommunity(previousCommunityContract).cooldown(msg.sender);
         lastInterval[msg.sender] = ICommunity(previousCommunityContract).lastInterval(msg.sender);
         claimed[msg.sender] = ICommunity(previousCommunityContract).claimed(msg.sender);

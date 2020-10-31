@@ -7,6 +7,7 @@ pragma solidity ^0.6.0;
  */
 contract Opportunities {
     event NewOpportunity(
+        uint256 id,
         uint256 min,
         uint256 max,
         uint256 target,
@@ -61,7 +62,7 @@ contract Opportunities {
         uint256 _max,
         uint256 _target,
         uint256 _initialFunding
-    ) public {
+    ) external {
         totalOpportunities = totalOpportunities + 1;
         opportunities[totalOpportunities] = Opportunity(
             _min,
@@ -71,8 +72,10 @@ contract Opportunities {
             // TODO: verify if division respects minimun price per unit
             _initialFunding / _target
         );
+        opportunityBy[totalOpportunities] = msg.sender;
         // TODO: tranfer cUSD using _initialFunding
         emit NewOpportunity(
+            totalOpportunities,
             _min,
             _max,
             _target,
@@ -85,14 +88,14 @@ contract Opportunities {
     //     //
     // }
 
-    function fund(uint256 _id, uint256 _amount) public {
+    function fund(uint256 _id, uint256 _amount) external {
         // Opportunity memory opportunity = opportunities[_id];
         // TODO: calculate new pricePerUnit
         // TODO: tranfer cUSD using _amount
         emit FundOpportunity(_id, _amount);
     }
 
-    function checkpoint(uint256 _id, uint256 _units, address _user) public onlyCreator(_id) {
+    function checkpoint(uint256 _id, uint256 _units, address _user) external onlyCreator(_id) {
         Opportunity memory opportunity = opportunities[_id];
         // TODO: verify if the sum does not overflow
         opportunity.current = opportunity.current + _units;
