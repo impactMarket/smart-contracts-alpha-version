@@ -3,9 +3,9 @@ import { should } from 'chai';
 import {
     ImpactMarketInstance,
     CommunityInstance,
-    CUsdInstance,
+    CUSDInstance,
     CommunityFactoryInstance,
-} from '../../../types/contracts/truffle';
+} from '../../../types/truffle-contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
     hour,
@@ -37,7 +37,7 @@ contract('ImpactMarket - Governance', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: CUsdInstance;
+    let cUSDInstance: CUSDInstance;
 
     it('should not be able to add community if missing signatures', async () => {
         cUSDInstance = await cUSD.new();

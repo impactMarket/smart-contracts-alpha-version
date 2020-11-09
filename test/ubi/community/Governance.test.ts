@@ -3,9 +3,9 @@ import { should } from 'chai';
 import {
     ImpactMarketInstance,
     CommunityInstance,
-    CUsdInstance,
+    CUSDInstance,
     CommunityFactoryInstance,
-} from '../../../types/contracts/truffle';
+} from '../../../types/truffle-contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
     hour,
@@ -42,7 +42,7 @@ contract('Community - Governance', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: CUsdInstance;
+    let cUSDInstance: CUSDInstance;
 
     beforeEach(async () => {
         cUSDInstance = await cUSD.new();
@@ -115,7 +115,7 @@ contract('Community - Governance', async (accounts) => {
             newCommunityFactoryInstance.address,
             { from: adminAccount1 }
         );
-        const newCommunityAddress = newTx.logs[2].args[1];
+        const newCommunityAddress = (newTx.logs[2].args as any)._communityAddress;
         communityInstance = await Community.at(newCommunityAddress);
         const previousCommunityNewBalance = await cUSDInstance.balanceOf(
             communityInstance.address

@@ -3,9 +3,9 @@ import { should } from 'chai';
 import {
     ImpactMarketInstance,
     CommunityInstance,
-    CUsdInstance,
+    CUSDInstance,
     CommunityFactoryInstance,
-} from '../../../types/contracts/truffle';
+} from '../../../types/truffle-contracts';
 import { defineAccounts } from '../../helpers/accounts';
 import {
     hour,
@@ -31,7 +31,7 @@ contract('ImpactMarket - Basic', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: CUsdInstance;
+    let cUSDInstance: CUSDInstance;
 
     beforeEach(async () => {
         cUSDInstance = await cUSD.new();

@@ -4,9 +4,9 @@ import { should } from 'chai';
 import {
     ImpactMarketInstance,
     CommunityInstance,
-    CUsdInstance,
+    CUSDInstance,
     CommunityFactoryInstance,
-} from '../../types/contracts/truffle';
+} from '../../types/truffle-contracts';
 import { defineAccounts } from '../helpers/accounts';
 import {
     decimals,
@@ -43,7 +43,7 @@ contract('Chaos test (complete flow)', async (accounts) => {
     let impactMarketInstance: ImpactMarketInstance;
     // let communityInstance: CommunityInstance;
     let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: CUsdInstance;
+    let cUSDInstance: CUSDInstance;
 
     // add community
     const addCommunity = async (
