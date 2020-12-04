@@ -1,13 +1,17 @@
+import { ethers } from "hardhat";
+import { Contract } from 'ethers';
+
+
 import BigNumber from 'bignumber.js';
 import { should } from 'chai';
 
-import {
-    ImpactMarketInstance,
-    CommunityInstance,
-    CUSDInstance,
-    CommunityFactoryInstance,
-} from '../../../types/truffle-contracts';
-import { defineAccounts } from '../../helpers/accounts';
+// import {
+//     ImpactMarketInstance,
+//     CommunityInstance,
+//     CUSDInstance,
+//     CommunityFactoryInstance,
+// } from '../../../types/truffle-contracts';
+import { AccountsAddress, AccountsSigner, defineAccounts, defineSigners } from '../../helpers/accounts';
 import {
     decimals,
     hour,
@@ -16,12 +20,18 @@ import {
     maxClaimTen,
     fiveCents,
 } from '../../helpers/constants';
-import {
-    ImpactMarket,
-    Community,
-    CommunityFactory,
-    cUSD,
-} from '../../helpers/contracts';
+// import {
+//     ImpactMarket,
+//     Community,
+//     CommunityFactory,
+//     cUSD,
+// } from '../../helpers/contracts';
+
+import { BeneficiaryState } from '../../helpers/utils';
+import { ImpactMarket } from "../../../types/ImpactMarket";
+import { CUSD } from "../../../types/CUSD";
+import { Community } from "../../../types/Community";
+import { CommunityFactory } from "../../../types/CommunityFactory";
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {
@@ -32,85 +42,85 @@ const {
 should();
 
 /** @test {Community} contract */
-contract('Community - Claim', async (accounts) => {
-    const {
-        adminAccount1,
-        communityManagerA,
-        beneficiaryA,
-        beneficiaryB,
-    } = defineAccounts(accounts);
+describe('Community - Claim', () => {
+    // const {
+    //     adminAccount1,
+    //     communityManagerA,
+    //     beneficiaryA,
+    //     beneficiaryB,
+    // } = defineAccounts(accounts);
+    let accounts: AccountsAddress;
+    let signers: AccountsSigner;
     // contract instances
-    let impactMarketInstance: ImpactMarketInstance;
-    let communityInstance: CommunityInstance;
-    let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: CUSDInstance;
+    let impactMarketInstance: Contract & ImpactMarket;
+    let communityInstance: Contract & Community;
+    let communityFactoryInstance: Contract & CommunityFactory;
+    let cUSDInstance: Contract & CUSD;
 
     beforeEach(async () => {
-        cUSDInstance = await cUSD.new();
-        impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [
-            adminAccount1,
-        ]);
-        communityFactoryInstance = await CommunityFactory.new(
+        accounts = await defineAccounts();
+        signers = await defineSigners();
+        //
+        const ImpactMarket = await ethers.getContractFactory("ImpactMarket");
+        const CommunityFactory = await ethers.getContractFactory("CommunityFactory");
+        const Community = await ethers.getContractFactory("Community");
+        const cUSD = await ethers.getContractFactory("cUSD");
+        //   
+        cUSDInstance = await cUSD.deploy() as Contract & CUSD;
+        impactMarketInstance = await ImpactMarket.deploy(cUSDInstance.address, [
+            accounts.adminAccount1,
+        ]) as Contract & ImpactMarket;
+        communityFactoryInstance = await CommunityFactory.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        );
+        ) as Contract & CommunityFactory;
         await impactMarketInstance.setCommunityFactory(
             communityFactoryInstance.address
         );
-        const tx = await impactMarketInstance.addCommunity(
-            communityManagerA,
+        const pendingTx = await impactMarketInstance.addCommunity(
+            accounts.communityManagerA,
             claimAmountTwo.toString(),
             maxClaimTen.toString(),
-            day,
-            hour,
-            { from: adminAccount1 }
+            day.toString(),
+            hour.toString()
         );
-        const communityManagerAddress = tx.logs[2].args[0];
-        communityInstance = await Community.at(communityManagerAddress);
-        await cUSDInstance.testFakeFundAddress(communityManagerAddress, {
-            from: adminAccount1,
-        });
-        await communityInstance.addBeneficiary(beneficiaryA, {
-            from: communityManagerA,
-        });
+        const tx = await pendingTx.wait();
+        const communityAddress = tx.events![3].args![0];
+        communityInstance = await Community.attach(communityAddress) as Contract & Community;
+        await cUSDInstance.testFakeFundAddress(communityAddress);
+        await communityInstance.connect(signers.communityManagerA).addBeneficiary(accounts.beneficiaryA);
     });
 
     it('should not claim without belong to community', async () => {
         await expectRevert(
-            communityInstance.claim({ from: beneficiaryB }),
+            communityInstance.connect(signers.beneficiaryB).claim(),
             'NOT_BENEFICIARY'
         );
     });
 
     it('should not claim after locked from community', async () => {
-        await communityInstance.lockBeneficiary(beneficiaryA, {
-            from: communityManagerA,
-        });
+        await communityInstance.connect(signers.communityManagerA).lockBeneficiary(accounts.beneficiaryA);
         await expectRevert(
-            communityInstance.claim({ from: beneficiaryA }),
+            communityInstance.connect(signers.beneficiaryA).claim(),
             'LOCKED'
         );
     });
 
     it('should not claim after removed from community', async () => {
-        await communityInstance.removeBeneficiary(beneficiaryA, {
-            from: communityManagerA,
-        });
+        await communityInstance.connect(signers.communityManagerA).removeBeneficiary(accounts.beneficiaryA);
         await expectRevert(
-            communityInstance.claim({ from: beneficiaryA }),
+            communityInstance.connect(signers.beneficiaryA).claim(),
             'REMOVED'
         );
     });
 
     it('should not claim if community is locked', async () => {
-        const receipt = await communityInstance.lock({
-            from: communityManagerA,
-        });
-        expectEvent(receipt, 'CommunityLocked', {
-            _by: communityManagerA,
-        });
+        const receipt = await communityInstance.connect(signers.communityManagerA).lock();
+        // expectEvent(await receipt.wait(), 'CommunityLocked', {
+        //     _by: accounts.communityManagerA,
+        // });
         await expectRevert(
-            communityInstance.claim({ from: beneficiaryA }),
+            communityInstance.connect(signers.beneficiaryA).claim(),
             'LOCKED'
         );
     });
@@ -122,17 +132,17 @@ contract('Community - Claim', async (accounts) => {
         const incrementInterval = (
             await communityInstance.incrementInterval()
         ).toNumber();
-        await communityInstance.claim({ from: beneficiaryA });
+        await communityInstance.connect(signers.beneficiaryA).claim();
         await time.increase(time.duration.seconds(baseInterval + 5));
-        await communityInstance.claim({ from: beneficiaryA });
+        await communityInstance.connect(signers.beneficiaryA).claim();
         await time.increase(time.duration.seconds(incrementInterval + 5));
         await expectRevert(
-            communityInstance.claim({ from: beneficiaryA }),
+            communityInstance.connect(signers.beneficiaryA).claim(),
             'NOT_YET'
         );
         await time.increase(time.duration.seconds(incrementInterval + 5));
         await expectRevert(
-            communityInstance.claim({ from: beneficiaryA }),
+            communityInstance.connect(signers.beneficiaryA).claim(),
             'NOT_YET'
         );
     });
@@ -142,8 +152,8 @@ contract('Community - Claim', async (accounts) => {
             await communityInstance.baseInterval()
         ).toNumber();
         await time.increase(time.duration.seconds(baseInterval + 5));
-        await communityInstance.claim({ from: beneficiaryA });
-        (await cUSDInstance.balanceOf(beneficiaryA))
+        await communityInstance.connect(signers.beneficiaryA).claim();
+        (await cUSDInstance.balanceOf(accounts.beneficiaryA))
             .toString()
             .should.be.equal(claimAmountTwo.plus(fiveCents).toString());
     });
@@ -165,24 +175,24 @@ contract('Community - Claim', async (accounts) => {
         )
             .div(decimals)
             .toNumber();
-        await communityInstance.claim({ from: beneficiaryA });
+        await communityInstance.connect(signers.beneficiaryA).claim();
         for (let index = 0; index < maxClaimAmount / claimAmount - 1; index++) {
             await time.increase(
                 time.duration.seconds(
                     baseInterval + incrementInterval * index + 5
                 )
             );
-            await communityInstance.claim({ from: beneficiaryA });
+            await communityInstance.connect(signers.beneficiaryA).claim();
         }
         await time.increase(
             time.duration.seconds(
                 baseInterval +
-                    incrementInterval * (maxClaimAmount / claimAmount) +
-                    5
+                incrementInterval * (maxClaimAmount / claimAmount) +
+                5
             )
         );
         await expectRevert(
-            communityInstance.claim({ from: beneficiaryA }),
+            communityInstance.connect(signers.beneficiaryA).claim(),
             'MAX_CLAIM'
         );
     });

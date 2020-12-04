@@ -51,6 +51,7 @@ describe('Community - Beneficiary', () => {
         const CommunityFactory = await ethers.getContractFactory("CommunityFactory");
         const Community = await ethers.getContractFactory("Community");
         const cUSD = await ethers.getContractFactory("cUSD");
+        //
         cUSDInstance = await cUSD.deploy() as Contract & CUSD;
         impactMarketInstance = await ImpactMarket.deploy(cUSDInstance.address, [
             accounts.adminAccount1,
@@ -114,9 +115,9 @@ describe('Community - Beneficiary', () => {
         (await communityInstance.beneficiaries(accounts.beneficiaryA))
             .toString()
             .should.be.equal(BeneficiaryState.NONE);
-        await expectRevert.unspecified(
+        await expectRevert(
             communityInstance.lockBeneficiary(accounts.beneficiaryA),
-            // 'NOT_YET'
+            'NOT_YET'
         );
     });
 
@@ -146,9 +147,9 @@ describe('Community - Beneficiary', () => {
         (await communityInstance.beneficiaries(accounts.beneficiaryA))
             .toString()
             .should.be.equal(BeneficiaryState.Valid);
-        await expectRevert.unspecified(
+        await expectRevert(
             communityInstance.unlockBeneficiary(accounts.beneficiaryA),
-            // 'NOT_YET'
+            'NOT_YET'
         );
     });
 
