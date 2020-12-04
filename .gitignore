@@ -119,3 +119,6 @@ types/
 .secret*
 coverage.json
 scripts/node/
+
+artifacts/
+cache/
