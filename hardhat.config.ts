@@ -1,6 +1,7 @@
 import { task, HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 // import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-web3";
 import "hardhat-typechain";
 
 // This is a sample Hardhat task. To learn how to create your own go to
