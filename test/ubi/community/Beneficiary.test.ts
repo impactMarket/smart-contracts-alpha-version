@@ -47,16 +47,16 @@ describe('Community - Beneficiary', () => {
         accounts = await defineAccounts();
         signers = await defineSigners();
         //
-        const ImpactMarket = await ethers.getContractFactory("ImpactMarket");
-        const CommunityFactory = await ethers.getContractFactory("CommunityFactory");
-        const Community = await ethers.getContractFactory("Community");
-        const cUSD = await ethers.getContractFactory("cUSD");
+        const ImpactMarketContract = await ethers.getContractFactory("ImpactMarket");
+        const CommunityFactoryContract = await ethers.getContractFactory("CommunityFactory");
+        const CommunityContract = await ethers.getContractFactory("Community");
+        const cUSDContract = await ethers.getContractFactory("cUSD");
         //
-        cUSDInstance = await cUSD.deploy() as Contract & CUSD;
-        impactMarketInstance = await ImpactMarket.deploy(cUSDInstance.address, [
+        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
+        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
             accounts.adminAccount1,
         ]) as Contract & ImpactMarket;
-        communityFactoryInstance = await CommunityFactory.deploy(
+        communityFactoryInstance = await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
         ) as Contract & CommunityFactory;
@@ -72,7 +72,7 @@ describe('Community - Beneficiary', () => {
         );
         const tx = await pendingTx.wait();
         const communityAddress = tx.events![3].args![0];
-        communityInstance = await Community.attach(communityAddress) as Contract & Community;
+        communityInstance = await CommunityContract.attach(communityAddress) as Contract & Community;
         communityInstance = communityInstance.connect(signers.communityManagerA) as Contract & Community;
         await cUSDInstance.testFakeFundAddress(communityAddress);
     });
