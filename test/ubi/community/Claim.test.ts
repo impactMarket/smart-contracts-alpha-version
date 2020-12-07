@@ -1,6 +1,5 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { Contract } from 'ethers';
-
 
 import BigNumber from 'bignumber.js';
 import { should } from 'chai';
@@ -11,7 +10,12 @@ import { should } from 'chai';
 //     CUSDInstance,
 //     CommunityFactoryInstance,
 // } from '../../../types/truffle-contracts';
-import { AccountsAddress, AccountsSigner, defineAccounts, defineSigners } from '../../helpers/accounts';
+import {
+    AccountsAddress,
+    AccountsSigner,
+    defineAccounts,
+    defineSigners,
+} from '../../helpers/accounts';
 import {
     decimals,
     hour,
@@ -28,10 +32,10 @@ import {
 // } from '../../helpers/contracts';
 
 import { BeneficiaryState } from '../../helpers/utils';
-import { ImpactMarket } from "../../../types/ImpactMarket";
-import { CUSD } from "../../../types/CUSD";
-import { Community } from "../../../types/Community";
-import { CommunityFactory } from "../../../types/CommunityFactory";
+import { ImpactMarket } from '../../../types/ImpactMarket';
+import { CUSD } from '../../../types/CUSD';
+import { Community } from '../../../types/Community';
+import { CommunityFactory } from '../../../types/CommunityFactory';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {
@@ -61,19 +65,24 @@ describe('Community - Claim', () => {
         accounts = await defineAccounts();
         signers = await defineSigners();
         //
-        const ImpactMarketContract = await ethers.getContractFactory("ImpactMarket");
-        const CommunityFactoryContract = await ethers.getContractFactory("CommunityFactory");
-        const CommunityContract = await ethers.getContractFactory("Community");
-        const cUSDContract = await ethers.getContractFactory("cUSD");
+        const ImpactMarketContract = await ethers.getContractFactory(
+            'ImpactMarket'
+        );
+        const CommunityFactoryContract = await ethers.getContractFactory(
+            'CommunityFactory'
+        );
+        const CommunityContract = await ethers.getContractFactory('Community');
+        const cUSDContract = await ethers.getContractFactory('cUSD');
         //
-        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
-        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
-            accounts.adminAccount1,
-        ]) as Contract & ImpactMarket;
-        communityFactoryInstance = await CommunityFactoryContract.deploy(
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        impactMarketInstance = (await ImpactMarketContract.deploy(
+            cUSDInstance.address,
+            [accounts.adminAccount1]
+        )) as Contract & ImpactMarket;
+        communityFactoryInstance = (await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        ) as Contract & CommunityFactory;
+        )) as Contract & CommunityFactory;
         await impactMarketInstance.setCommunityFactory(
             communityFactoryInstance.address
         );
@@ -86,9 +95,13 @@ describe('Community - Claim', () => {
         );
         const tx = await pendingTx.wait();
         const communityAddress = tx.events![3].args![0];
-        communityInstance = await CommunityContract.attach(communityAddress) as Contract & Community;
+        communityInstance = (await CommunityContract.attach(
+            communityAddress
+        )) as Contract & Community;
         await cUSDInstance.testFakeFundAddress(communityAddress);
-        await communityInstance.connect(signers.communityManagerA).addBeneficiary(accounts.beneficiaryA);
+        await communityInstance
+            .connect(signers.communityManagerA)
+            .addBeneficiary(accounts.beneficiaryA);
     });
 
     it('should not claim without belong to community', async () => {
@@ -99,7 +112,9 @@ describe('Community - Claim', () => {
     });
 
     it('should not claim after locked from community', async () => {
-        await communityInstance.connect(signers.communityManagerA).lockBeneficiary(accounts.beneficiaryA);
+        await communityInstance
+            .connect(signers.communityManagerA)
+            .lockBeneficiary(accounts.beneficiaryA);
         await expectRevert(
             communityInstance.connect(signers.beneficiaryA).claim(),
             'LOCKED'
@@ -107,7 +122,9 @@ describe('Community - Claim', () => {
     });
 
     it('should not claim after removed from community', async () => {
-        await communityInstance.connect(signers.communityManagerA).removeBeneficiary(accounts.beneficiaryA);
+        await communityInstance
+            .connect(signers.communityManagerA)
+            .removeBeneficiary(accounts.beneficiaryA);
         await expectRevert(
             communityInstance.connect(signers.beneficiaryA).claim(),
             'REMOVED'
@@ -115,7 +132,9 @@ describe('Community - Claim', () => {
     });
 
     it('should not claim if community is locked', async () => {
-        const receipt = await communityInstance.connect(signers.communityManagerA).lock();
+        const receipt = await communityInstance
+            .connect(signers.communityManagerA)
+            .lock();
         // expectEvent(await receipt.wait(), 'CommunityLocked', {
         //     _by: accounts.communityManagerA,
         // });
@@ -187,8 +206,8 @@ describe('Community - Claim', () => {
         await time.increase(
             time.duration.seconds(
                 baseInterval +
-                incrementInterval * (maxClaimAmount / claimAmount) +
-                5
+                    incrementInterval * (maxClaimAmount / claimAmount) +
+                    5
             )
         );
         await expectRevert(

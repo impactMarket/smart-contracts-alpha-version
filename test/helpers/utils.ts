@@ -12,7 +12,10 @@ export function BNtoBigNumber(value: any) {
     return new BigNumber(value.toString());
 }
 
-export function filterEvent(tx: ContractReceipt, eventName: string): Event | undefined {
+export function filterEvent(
+    tx: ContractReceipt,
+    eventName: string
+): Event | undefined {
     if (tx.events) {
         for (let index = 0; index < tx.events.length; index++) {
             const event = tx.events[index];
@@ -21,5 +24,5 @@ export function filterEvent(tx: ContractReceipt, eventName: string): Event | und
             }
         }
     }
-    return undefined
+    return undefined;
 }
