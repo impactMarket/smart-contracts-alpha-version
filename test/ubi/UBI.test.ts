@@ -1,13 +1,15 @@
 import BigNumber from 'bignumber.js';
+import { web3, network, ethers } from "hardhat";
 import { should } from 'chai';
+import { Contract, ContractFactory, Signer } from 'ethers';
 
-import {
-    ImpactMarketInstance,
-    CommunityInstance,
-    CUSDInstance,
-    CommunityFactoryInstance,
-} from '../../types/truffle-contracts';
-import { defineAccounts } from '../helpers/accounts';
+// import {
+//     ImpactMarketInstance,
+//     CommunityInstance,
+//     CUSDInstance,
+//     CommunityFactoryInstance,
+// } from '../../types/truffle-contracts';
+import { AccountsAddress, AccountsSigner, defineAccounts, defineSigners } from '../helpers/accounts';
 import {
     decimals,
     hour,
@@ -16,65 +18,64 @@ import {
     maxClaimTen,
     fiveCents,
 } from '../helpers/constants';
-import {
-    ImpactMarket,
-    Community,
-    CommunityFactory,
-    cUSD,
-} from '../helpers/contracts';
-import { BeneficiaryState, BNtoBigNumber } from '../helpers/utils';
+// import {
+//     ImpactMarket,
+//     Community,
+//     CommunityFactory,
+//     cUSD,
+// } from '../helpers/contracts';
+import { ImpactMarket } from "../../types/ImpactMarket";
+import { CUSD } from "../../types/CUSD";
+import { Community } from "../../types/Community";
+import { CommunityFactory } from "../../types/CommunityFactory";
+import { BeneficiaryState, BNtoBigNumber, filterEvent } from '../helpers/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert, time } = require('@openzeppelin/test-helpers');
 should();
 
 /** @test {ImpactMarket} contract */
-contract('Chaos test (complete flow)', async (accounts) => {
-    const {
-        adminAccount1,
-        communityManagerA,
-        communityManagerB,
-        beneficiaryA,
-        beneficiaryB,
-        beneficiaryC,
-        beneficiaryD,
-    } = defineAccounts(accounts);
+describe('Chaos test (complete flow)', () => {
+    let accounts: AccountsAddress;
+    let signers: AccountsSigner;
     // contract instances
-    let impactMarketInstance: ImpactMarketInstance;
-    // let communityInstance: CommunityInstance;
-    let communityFactoryInstance: CommunityFactoryInstance;
-    let cUSDInstance: CUSDInstance;
+    let impactMarketInstance: Contract & ImpactMarket;
+    let communityInstance: Contract & Community;
+    let communityFactoryInstance: Contract & CommunityFactory;
+    let cUSDInstance: Contract & CUSD;
+    //
+    let ImpactMarketContract: ContractFactory;
+    let CommunityFactoryContract: ContractFactory;
+    let CommunityContract: ContractFactory;
+    let cUSDContract: ContractFactory;
 
     // add community
     const addCommunity = async (
         communityManager: string
-    ): Promise<CommunityInstance> => {
-        const tx = await impactMarketInstance.addCommunity(
+    ): Promise<Contract & Community> => {
+        const rawTx = await impactMarketInstance.connect(signers.adminAccount1).addCommunity(
             communityManager,
             claimAmountTwo.toString(),
             maxClaimTen.toString(),
-            day,
-            hour,
-            { from: adminAccount1 }
+            day.toString(),
+            hour.toString(),
         );
         // eslint-disable-next-line prefer-const
-        const communityManagerAddress = tx.logs[2].args[0] as string;
-        const instance = await Community.at(communityManagerAddress);
-        await cUSDInstance.testFakeFundAddress(communityManagerAddress, {
-            from: adminAccount1,
-        });
+        const tx = await rawTx.wait();
+        const communityAddress = filterEvent(tx, 'CommunityAdded')!.args![0];
+        const instance = await CommunityContract.attach(communityAddress) as Contract & Community;
+        await cUSDInstance.connect(signers.adminAccount1).testFakeFundAddress(communityAddress);
         return instance;
     };
     // add beneficiary
     const addBeneficiary = async (
-        instance: CommunityInstance,
+        instance: Contract & Community,
         beneficiaryAddress: string,
-        communityManagerAddress: string
+        communityManagerSigner: Signer
     ): Promise<void> => {
-        const tx = await instance.addBeneficiary(beneficiaryAddress, {
-            from: communityManagerAddress,
-        });
-        const blockData = await web3.eth.getBlock(tx.receipt.blockNumber);
+        const rawTx = await instance.connect(communityManagerSigner).addBeneficiary(beneficiaryAddress);
+        const tx = await rawTx.wait();
+        const blockData = await ethers.provider.getBlock(tx.blockNumber);
         (await instance.beneficiaries(beneficiaryAddress))
             .toString()
             .should.be.equal(BeneficiaryState.Valid);
@@ -84,7 +85,7 @@ contract('Chaos test (complete flow)', async (accounts) => {
     };
     // wait claim time
     const waitClaimTime = async (
-        instance: CommunityInstance,
+        instance: Contract & Community,
         beneficiaryAddress: string
     ): Promise<void> => {
         const waitIs = (
@@ -94,8 +95,9 @@ contract('Chaos test (complete flow)', async (accounts) => {
     };
     // claim
     const beneficiaryClaim = async (
-        instance: CommunityInstance,
-        beneficiaryAddress: string
+        instance: Contract & Community,
+        beneficiaryAddress: string,
+        beneficiarySigner: Signer
     ): Promise<void> => {
         const previousBalance = BNtoBigNumber(
             await cUSDInstance.balanceOf(beneficiaryAddress)
@@ -103,7 +105,7 @@ contract('Chaos test (complete flow)', async (accounts) => {
         const previousLastInterval = BNtoBigNumber(
             await instance.lastInterval(beneficiaryAddress)
         );
-        await instance.claim({ from: beneficiaryAddress });
+        await instance.connect(beneficiarySigner).claim();
         const currentBalance = BNtoBigNumber(
             await cUSDInstance.balanceOf(beneficiaryAddress)
         );
@@ -122,37 +124,45 @@ contract('Chaos test (complete flow)', async (accounts) => {
 
     //
     beforeEach(async () => {
-        cUSDInstance = await cUSD.new();
-        impactMarketInstance = await ImpactMarket.new(cUSDInstance.address, [
-            adminAccount1,
-        ]);
-        communityFactoryInstance = await CommunityFactory.new(
+        accounts = await defineAccounts();
+        signers = await defineSigners();
+        //
+        ImpactMarketContract = await ethers.getContractFactory("ImpactMarket");
+        CommunityFactoryContract = await ethers.getContractFactory("CommunityFactory");
+        CommunityContract = await ethers.getContractFactory("Community");
+        cUSDContract = await ethers.getContractFactory("cUSD");
+        //
+        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
+        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
+            accounts.adminAccount1,
+        ]) as Contract & ImpactMarket;
+        communityFactoryInstance = await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        );
+        ) as Contract & CommunityFactory;
         await impactMarketInstance.setCommunityFactory(
             communityFactoryInstance.address
         );
     });
     it('one beneficiary to one community', async () => {
-        const communityInstanceA = await addCommunity(communityManagerA);
+        const communityInstanceA = await addCommunity(accounts.communityManagerA);
         await addBeneficiary(
             communityInstanceA,
-            beneficiaryA,
-            communityManagerA
+            accounts.beneficiaryA,
+            signers.communityManagerA
         );
-        await waitClaimTime(communityInstanceA, beneficiaryA);
-        await beneficiaryClaim(communityInstanceA, beneficiaryA);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryA);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA);
         await expectRevert(
-            beneficiaryClaim(communityInstanceA, beneficiaryA),
+            beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA),
             'NOT_YET'
         );
-        await waitClaimTime(communityInstanceA, beneficiaryA);
-        await beneficiaryClaim(communityInstanceA, beneficiaryA);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryA);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA);
     });
 
     it('many beneficiaries to one community', async () => {
-        const communityInstanceA = await addCommunity(communityManagerA);
+        const communityInstanceA = await addCommunity(accounts.communityManagerA);
         const previousCommunityBalance = new BigNumber(
             (
                 await cUSDInstance.balanceOf(communityInstanceA.address)
@@ -160,32 +170,32 @@ contract('Chaos test (complete flow)', async (accounts) => {
         );
         await addBeneficiary(
             communityInstanceA,
-            beneficiaryA,
-            communityManagerA
+            accounts.beneficiaryA,
+            signers.communityManagerA
         );
         await addBeneficiary(
             communityInstanceA,
-            beneficiaryB,
-            communityManagerA
+            accounts.beneficiaryB,
+            signers.communityManagerA
         );
         await addBeneficiary(
             communityInstanceA,
-            beneficiaryC,
-            communityManagerA
+            accounts.beneficiaryC,
+            signers.communityManagerA
         );
         await addBeneficiary(
             communityInstanceA,
-            beneficiaryD,
-            communityManagerA
+            accounts.beneficiaryD,
+            signers.communityManagerA
         );
         // beneficiary A claims twice
-        await waitClaimTime(communityInstanceA, beneficiaryA);
-        await beneficiaryClaim(communityInstanceA, beneficiaryA);
-        await waitClaimTime(communityInstanceA, beneficiaryA);
-        await beneficiaryClaim(communityInstanceA, beneficiaryA);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryA);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryA);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA);
         // beneficiary B claims once
-        await waitClaimTime(communityInstanceA, beneficiaryB);
-        await beneficiaryClaim(communityInstanceA, beneficiaryB);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryB);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryB, signers.beneficiaryB);
         // beneficiary C claims it all
         const claimAmount = new BigNumber(
             (await communityInstanceA.claimAmount()).toString()
@@ -199,19 +209,19 @@ contract('Chaos test (complete flow)', async (accounts) => {
             .toNumber();
         const maxClaimsPerUser = maxClaimAmount / claimAmount;
         for (let index = 0; index < maxClaimsPerUser; index++) {
-            await waitClaimTime(communityInstanceA, beneficiaryC);
-            await beneficiaryClaim(communityInstanceA, beneficiaryC);
+            await waitClaimTime(communityInstanceA, accounts.beneficiaryC);
+            await beneficiaryClaim(communityInstanceA, accounts.beneficiaryC, signers.beneficiaryC);
         }
         // beneficiary B can still claim
-        await waitClaimTime(communityInstanceA, beneficiaryB);
-        await beneficiaryClaim(communityInstanceA, beneficiaryB);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryB);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryB, signers.beneficiaryB);
         // beneficiary A can still claim
-        await waitClaimTime(communityInstanceA, beneficiaryA);
-        await beneficiaryClaim(communityInstanceA, beneficiaryA);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryA);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA);
         // beneficiary C can't claim anymore
-        await waitClaimTime(communityInstanceA, beneficiaryC);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryC);
         await expectRevert(
-            beneficiaryClaim(communityInstanceA, beneficiaryC),
+            beneficiaryClaim(communityInstanceA, accounts.beneficiaryC, signers.beneficiaryC),
             'MAX_CLAIM'
         );
         const currentCommunityBalance = new BigNumber(
@@ -232,8 +242,8 @@ contract('Chaos test (complete flow)', async (accounts) => {
 
     it('many beneficiaries to many communities', async () => {
         // community A
-        const communityInstanceA = await addCommunity(communityManagerA);
-        const communityInstanceB = await addCommunity(communityManagerB);
+        const communityInstanceA = await addCommunity(accounts.communityManagerA);
+        const communityInstanceB = await addCommunity(accounts.communityManagerB);
         const previousCommunityBalanceA = new BigNumber(
             (
                 await cUSDInstance.balanceOf(communityInstanceA.address)
@@ -247,30 +257,30 @@ contract('Chaos test (complete flow)', async (accounts) => {
         //
         await addBeneficiary(
             communityInstanceA,
-            beneficiaryA,
-            communityManagerA
+            accounts.beneficiaryA,
+            signers.communityManagerA
         );
         await addBeneficiary(
             communityInstanceA,
-            beneficiaryB,
-            communityManagerA
+            accounts.beneficiaryB,
+            signers.communityManagerA
         );
         //
         await addBeneficiary(
             communityInstanceB,
-            beneficiaryC,
-            communityManagerB
+            accounts.beneficiaryC,
+            signers.communityManagerB
         );
         await addBeneficiary(
             communityInstanceB,
-            beneficiaryD,
-            communityManagerB
+            accounts.beneficiaryD,
+            signers.communityManagerB
         );
         // beneficiary A claims twice
-        await waitClaimTime(communityInstanceA, beneficiaryA);
-        await beneficiaryClaim(communityInstanceA, beneficiaryA);
-        await waitClaimTime(communityInstanceA, beneficiaryA);
-        await beneficiaryClaim(communityInstanceA, beneficiaryA);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryA);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryA);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA);
         // beneficiary B claims it all
         const claimAmountA = new BigNumber(
             (await communityInstanceA.claimAmount()).toString()
@@ -284,8 +294,8 @@ contract('Chaos test (complete flow)', async (accounts) => {
             .toNumber();
         const maxClaimsPerUserA = maxClaimAmountA / claimAmountA;
         for (let index = 0; index < maxClaimsPerUserA; index++) {
-            await waitClaimTime(communityInstanceA, beneficiaryB);
-            await beneficiaryClaim(communityInstanceA, beneficiaryB);
+            await waitClaimTime(communityInstanceA, accounts.beneficiaryB);
+            await beneficiaryClaim(communityInstanceA, accounts.beneficiaryB, signers.beneficiaryB);
         }
         // beneficiary C claims it all
         const claimAmountB = new BigNumber(
@@ -300,34 +310,34 @@ contract('Chaos test (complete flow)', async (accounts) => {
             .toNumber();
         const maxClaimsPerUserB = maxClaimAmountB / claimAmountB;
         for (let index = 0; index < maxClaimsPerUserB; index++) {
-            await waitClaimTime(communityInstanceB, beneficiaryC);
-            await beneficiaryClaim(communityInstanceB, beneficiaryC);
+            await waitClaimTime(communityInstanceB, accounts.beneficiaryC);
+            await beneficiaryClaim(communityInstanceB, accounts.beneficiaryC, signers.beneficiaryC);
         }
         // beneficiary D claims three times
-        await waitClaimTime(communityInstanceB, beneficiaryD);
-        await beneficiaryClaim(communityInstanceB, beneficiaryD);
-        await waitClaimTime(communityInstanceB, beneficiaryD);
-        await beneficiaryClaim(communityInstanceB, beneficiaryD);
-        await waitClaimTime(communityInstanceB, beneficiaryD);
-        await beneficiaryClaim(communityInstanceB, beneficiaryD);
+        await waitClaimTime(communityInstanceB, accounts.beneficiaryD);
+        await beneficiaryClaim(communityInstanceB, accounts.beneficiaryD, signers.beneficiaryD);
+        await waitClaimTime(communityInstanceB, accounts.beneficiaryD);
+        await beneficiaryClaim(communityInstanceB, accounts.beneficiaryD, signers.beneficiaryD);
+        await waitClaimTime(communityInstanceB, accounts.beneficiaryD);
+        await beneficiaryClaim(communityInstanceB, accounts.beneficiaryD, signers.beneficiaryD);
         // beneficiary A can still claim
-        await waitClaimTime(communityInstanceA, beneficiaryA);
-        await beneficiaryClaim(communityInstanceA, beneficiaryA);
+        await waitClaimTime(communityInstanceA, accounts.beneficiaryA);
+        await beneficiaryClaim(communityInstanceA, accounts.beneficiaryA, signers.beneficiaryA);
         // beneficiary C can't claim anymore
-        await waitClaimTime(communityInstanceB, beneficiaryC);
+        await waitClaimTime(communityInstanceB, accounts.beneficiaryC);
         await expectRevert(
-            beneficiaryClaim(communityInstanceB, beneficiaryC),
+            beneficiaryClaim(communityInstanceB, accounts.beneficiaryC, signers.beneficiaryC),
             'MAX_CLAIM'
         );
         // beneficiary B can't claim anymore
-        await waitClaimTime(communityInstanceB, beneficiaryC);
+        await waitClaimTime(communityInstanceB, accounts.beneficiaryC);
         await expectRevert(
-            beneficiaryClaim(communityInstanceB, beneficiaryC),
+            beneficiaryClaim(communityInstanceB, accounts.beneficiaryC, signers.beneficiaryC),
             'MAX_CLAIM'
         );
         // beneficiary D can still claim
-        await waitClaimTime(communityInstanceB, beneficiaryD);
-        await beneficiaryClaim(communityInstanceB, beneficiaryD);
+        await waitClaimTime(communityInstanceB, accounts.beneficiaryD);
+        await beneficiaryClaim(communityInstanceB, accounts.beneficiaryD, signers.beneficiaryD);
         // balances
         const currentCommunityBalanceA = new BigNumber(
             (

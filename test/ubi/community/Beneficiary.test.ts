@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
 import { should } from 'chai';
-import { Contract } from 'ethers';
+import { Contract, ContractFactory } from 'ethers';
 
 // import {
 //     ImpactMarketInstance,
@@ -42,15 +42,20 @@ describe('Community - Beneficiary', () => {
     let communityInstance: Contract & Community;
     let communityFactoryInstance: Contract & CommunityFactory;
     let cUSDInstance: Contract & CUSD;
+    //
+    let ImpactMarketContract: ContractFactory;
+    let CommunityFactoryContract: ContractFactory;
+    let CommunityContract: ContractFactory;
+    let cUSDContract: ContractFactory;
 
     beforeEach(async () => {
         accounts = await defineAccounts();
         signers = await defineSigners();
         //
-        const ImpactMarketContract = await ethers.getContractFactory("ImpactMarket");
-        const CommunityFactoryContract = await ethers.getContractFactory("CommunityFactory");
-        const CommunityContract = await ethers.getContractFactory("Community");
-        const cUSDContract = await ethers.getContractFactory("cUSD");
+        ImpactMarketContract = await ethers.getContractFactory("ImpactMarket");
+        CommunityFactoryContract = await ethers.getContractFactory("CommunityFactory");
+        CommunityContract = await ethers.getContractFactory("Community");
+        cUSDContract = await ethers.getContractFactory("cUSD");
         //
         cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
         impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
