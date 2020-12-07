@@ -3,6 +3,7 @@ import "@nomiclabs/hardhat-waffle";
 // import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-web3";
 import "hardhat-typechain";
+import "solidity-coverage";
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
