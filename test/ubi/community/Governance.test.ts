@@ -1,13 +1,11 @@
-import { ethers } from 'hardhat';
 import { should } from 'chai';
 import { Contract, ContractFactory } from 'ethers';
+import { ethers } from 'hardhat';
 
-// import {
-//     ImpactMarketInstance,
-//     CommunityInstance,
-//     CUSDInstance,
-//     CommunityFactoryInstance,
-// } from '../../../types/truffle-contracts';
+import { CUSD } from '../../../types/CUSD';
+import { Community } from '../../../types/Community';
+import { CommunityFactory } from '../../../types/CommunityFactory';
+import { ImpactMarket } from '../../../types/ImpactMarket';
 import {
     AccountsAddress,
     AccountsSigner,
@@ -21,22 +19,11 @@ import {
     claimAmountTwo,
     maxClaimTen,
 } from '../../helpers/constants';
-// import {
-//     ImpactMarket,
-//     Community,
-//     CommunityFactory,
-//     cUSD,
-// } from '../../helpers/contracts';
-import { BeneficiaryState } from '../../helpers/utils';
-import { ImpactMarket } from '../../../types/ImpactMarket';
-import { CUSD } from '../../../types/CUSD';
-import { Community } from '../../../types/Community';
-import { CommunityFactory } from '../../../types/CommunityFactory';
+import { expectEvent } from '../../helpers/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {
     expectRevert,
-    expectEvent,
     constants,
 } = require('@openzeppelin/test-helpers');
 should();
@@ -312,23 +299,23 @@ describe('Community - Governance', () => {
         const receipt = await communityInstance
             .connect(signers.communityManagerA)
             .lock();
-        // expectEvent(receipt, 'CommunityLocked', {
-        //     _by: accounts.communityManagerA,
-        // });
+        expectEvent(await receipt.wait(), 'CommunityLocked'/*, {
+            _by: accounts.communityManagerA,
+        }*/);
     });
 
     it('should be able to unlock community if manager', async () => {
         let receipt = await communityInstance
             .connect(signers.communityManagerA)
             .lock();
-        // expectEvent(receipt, 'CommunityLocked', {
-        //     _by: accounts.communityManagerA,
-        // });
+        expectEvent(await receipt.wait(), 'CommunityLocked'/*, {
+            _by: accounts.communityManagerA,
+        }*/);
         receipt = await communityInstance
             .connect(signers.communityManagerA)
             .unlock();
-        // expectEvent(receipt, 'CommunityUnlocked', {
-        //     _by: accounts.communityManagerA,
-        // });
+        expectEvent(await receipt.wait(), 'CommunityUnlocked'/*, {
+            _by: accounts.communityManagerA,
+        }*/);
     });
 });

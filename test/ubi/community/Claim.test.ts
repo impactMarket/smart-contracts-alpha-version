@@ -1,15 +1,12 @@
-import { ethers } from 'hardhat';
-import { Contract } from 'ethers';
-
 import BigNumber from 'bignumber.js';
 import { should } from 'chai';
+import { Contract } from 'ethers';
+import { ethers } from 'hardhat';
 
-// import {
-//     ImpactMarketInstance,
-//     CommunityInstance,
-//     CUSDInstance,
-//     CommunityFactoryInstance,
-// } from '../../../types/truffle-contracts';
+import { CUSD } from '../../../types/CUSD';
+import { Community } from '../../../types/Community';
+import { CommunityFactory } from '../../../types/CommunityFactory';
+import { ImpactMarket } from '../../../types/ImpactMarket';
 import {
     AccountsAddress,
     AccountsSigner,
@@ -24,35 +21,17 @@ import {
     maxClaimTen,
     fiveCents,
 } from '../../helpers/constants';
-// import {
-//     ImpactMarket,
-//     Community,
-//     CommunityFactory,
-//     cUSD,
-// } from '../../helpers/contracts';
-
-import { BeneficiaryState } from '../../helpers/utils';
-import { ImpactMarket } from '../../../types/ImpactMarket';
-import { CUSD } from '../../../types/CUSD';
-import { Community } from '../../../types/Community';
-import { CommunityFactory } from '../../../types/CommunityFactory';
+import { expectEvent } from '../../helpers/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const {
     expectRevert,
-    expectEvent,
     time,
 } = require('@openzeppelin/test-helpers');
 should();
 
 /** @test {Community} contract */
 describe('Community - Claim', () => {
-    // const {
-    //     adminAccount1,
-    //     communityManagerA,
-    //     beneficiaryA,
-    //     beneficiaryB,
-    // } = defineAccounts(accounts);
     let accounts: AccountsAddress;
     let signers: AccountsSigner;
     // contract instances
@@ -135,9 +114,9 @@ describe('Community - Claim', () => {
         const receipt = await communityInstance
             .connect(signers.communityManagerA)
             .lock();
-        // expectEvent(await receipt.wait(), 'CommunityLocked', {
-        //     _by: accounts.communityManagerA,
-        // });
+        expectEvent(await receipt.wait(), 'CommunityLocked'/*, {
+            _by: accounts.communityManagerA,
+        }*/);
         await expectRevert(
             communityInstance.connect(signers.beneficiaryA).claim(),
             'LOCKED'
@@ -206,8 +185,8 @@ describe('Community - Claim', () => {
         await time.increase(
             time.duration.seconds(
                 baseInterval +
-                    incrementInterval * (maxClaimAmount / claimAmount) +
-                    5
+                incrementInterval * (maxClaimAmount / claimAmount) +
+                5
             )
         );
         await expectRevert(
