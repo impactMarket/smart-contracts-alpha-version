@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { ContractReceipt, Event } from 'ethers';
+import { expect } from 'chai';
 
 export enum BeneficiaryState {
     NONE = '0',
@@ -25,4 +26,16 @@ export function filterEvent(
         }
     }
     return undefined;
+}
+
+// TODO: add eventArg confirmation
+export function expectEvent(
+    tx: ContractReceipt,
+    eventName: string,
+) {
+    if (tx.events === undefined) {
+        throw Error('No events found!');
+    }
+    const events = tx.events?.filter(e => e.event === eventName);
+    expect(events.length > 0).to.equal(true, `No '${eventName}' events found`);
 }

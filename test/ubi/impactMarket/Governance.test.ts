@@ -1,13 +1,11 @@
-import { ethers } from 'hardhat';
 import { should } from 'chai';
 import { Contract, ContractFactory } from 'ethers';
+import { ethers } from 'hardhat';
 
-// import {
-//     ImpactMarketInstance,
-//     CommunityInstance,
-//     CUSDInstance,
-//     CommunityFactoryInstance,
-// } from '../../../types/truffle-contracts';
+import { CUSD } from '../../../types/CUSD';
+import { Community } from '../../../types/Community';
+import { CommunityFactory } from '../../../types/CommunityFactory';
+import { ImpactMarket } from '../../../types/ImpactMarket';
 import {
     AccountsAddress,
     AccountsSigner,
@@ -21,17 +19,7 @@ import {
     claimAmountTwo,
     maxClaimTen,
 } from '../../helpers/constants';
-// import {
-//     ImpactMarket,
-//     Community,
-//     CommunityFactory,
-//     cUSD,
-// } from '../../helpers/contracts';
-import { BeneficiaryState, filterEvent } from '../../helpers/utils';
-import { ImpactMarket } from '../../../types/ImpactMarket';
-import { CUSD } from '../../../types/CUSD';
-import { Community } from '../../../types/Community';
-import { CommunityFactory } from '../../../types/CommunityFactory';
+import { filterEvent } from '../../helpers/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert } = require('@openzeppelin/test-helpers');
@@ -109,7 +97,7 @@ describe('ImpactMarket - Governance', () => {
         await impactMarketInstance
             .connect(signers.adminAccount2)
             .setCommunityFactory(communityFactoryInstance.address);
-        let rawTx1 = await impactMarketInstance
+        const rawTx1 = await impactMarketInstance
             .connect(signers.adminAccount1)
             .addCommunity(
                 accounts.communityManagerA,
@@ -118,7 +106,7 @@ describe('ImpactMarket - Governance', () => {
                 day.toString(),
                 hour.toString()
             );
-        let tx1 = await rawTx1.wait();
+        const tx1 = await rawTx1.wait();
         tx1.events!.length.should.be.equal(0);
         const rawTx2 = await impactMarketInstance
             .connect(signers.adminAccount2)

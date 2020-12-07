@@ -1,14 +1,12 @@
 import BigNumber from 'bignumber.js';
-import { web3, network, ethers } from 'hardhat';
 import { should } from 'chai';
 import { Contract, ContractFactory, Signer } from 'ethers';
+import { ethers } from 'hardhat';
 
-// import {
-//     ImpactMarketInstance,
-//     CommunityInstance,
-//     CUSDInstance,
-//     CommunityFactoryInstance,
-// } from '../../types/truffle-contracts';
+import { CUSD } from '../../types/CUSD';
+import { Community } from '../../types/Community';
+import { CommunityFactory } from '../../types/CommunityFactory';
+import { ImpactMarket } from '../../types/ImpactMarket';
 import {
     AccountsAddress,
     AccountsSigner,
@@ -23,16 +21,6 @@ import {
     maxClaimTen,
     fiveCents,
 } from '../helpers/constants';
-// import {
-//     ImpactMarket,
-//     Community,
-//     CommunityFactory,
-//     cUSD,
-// } from '../helpers/contracts';
-import { ImpactMarket } from '../../types/ImpactMarket';
-import { CUSD } from '../../types/CUSD';
-import { Community } from '../../types/Community';
-import { CommunityFactory } from '../../types/CommunityFactory';
 import { BeneficiaryState, BNtoBigNumber, filterEvent } from '../helpers/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -45,7 +33,6 @@ describe('Chaos test (complete flow)', () => {
     let signers: AccountsSigner;
     // contract instances
     let impactMarketInstance: Contract & ImpactMarket;
-    let communityInstance: Contract & Community;
     let communityFactoryInstance: Contract & CommunityFactory;
     let cUSDInstance: Contract & CUSD;
     //
