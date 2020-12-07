@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { should } from 'chai';
 import { Contract, ContractFactory } from 'ethers';
 
@@ -8,7 +8,12 @@ import { Contract, ContractFactory } from 'ethers';
 //     CUSDInstance,
 //     CommunityFactoryInstance,
 // } from '../../../types/truffle-contracts';
-import { AccountsAddress, AccountsSigner, defineAccounts, defineSigners } from '../../helpers/accounts';
+import {
+    AccountsAddress,
+    AccountsSigner,
+    defineAccounts,
+    defineSigners,
+} from '../../helpers/accounts';
 import {
     hour,
     day,
@@ -23,11 +28,10 @@ import {
 //     cUSD,
 // } from '../../helpers/contracts';
 import { BeneficiaryState, filterEvent } from '../../helpers/utils';
-import { ImpactMarket } from "../../../types/ImpactMarket";
-import { CUSD } from "../../../types/CUSD";
-import { Community } from "../../../types/Community";
-import { CommunityFactory } from "../../../types/CommunityFactory";
-
+import { ImpactMarket } from '../../../types/ImpactMarket';
+import { CUSD } from '../../../types/CUSD';
+import { Community } from '../../../types/Community';
+import { CommunityFactory } from '../../../types/CommunityFactory';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert } = require('@openzeppelin/test-helpers');
@@ -52,182 +56,209 @@ describe('ImpactMarket - Governance', () => {
         accounts = await defineAccounts();
         signers = await defineSigners();
         //
-        ImpactMarketContract = await ethers.getContractFactory("ImpactMarket");
-        CommunityFactoryContract = await ethers.getContractFactory("CommunityFactory");
-        CommunityContract = await ethers.getContractFactory("Community");
-        cUSDContract = await ethers.getContractFactory("cUSD");
+        ImpactMarketContract = await ethers.getContractFactory('ImpactMarket');
+        CommunityFactoryContract = await ethers.getContractFactory(
+            'CommunityFactory'
+        );
+        CommunityContract = await ethers.getContractFactory('Community');
+        cUSDContract = await ethers.getContractFactory('cUSD');
     });
 
     it('should not be able to add community if missing signatures', async () => {
-        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
-        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
-            accounts.adminAccount1,
-            accounts.adminAccount2,
-        ]) as Contract & ImpactMarket;
-        communityFactoryInstance = await CommunityFactoryContract.deploy(
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        impactMarketInstance = (await ImpactMarketContract.deploy(
+            cUSDInstance.address,
+            [accounts.adminAccount1, accounts.adminAccount2]
+        )) as Contract & ImpactMarket;
+        communityFactoryInstance = (await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        ) as Contract & CommunityFactory;
-        await impactMarketInstance.connect(signers.adminAccount1).setCommunityFactory(
-            communityFactoryInstance.address,
-        );
-        await impactMarketInstance.connect(signers.adminAccount2).setCommunityFactory(
-            communityFactoryInstance.address,
-        );
-        const rawTx = await impactMarketInstance.connect(signers.adminAccount1).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
+        )) as Contract & CommunityFactory;
+        await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .setCommunityFactory(communityFactoryInstance.address);
+        await impactMarketInstance
+            .connect(signers.adminAccount2)
+            .setCommunityFactory(communityFactoryInstance.address);
+        const rawTx = await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                day.toString(),
+                hour.toString()
+            );
         const tx = await rawTx.wait();
         tx.events!.length.should.be.equal(0);
     });
 
     it('should use differente parameters for each community', async () => {
-        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
-        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
-            accounts.adminAccount1,
-            accounts.adminAccount2,
-        ]) as Contract & ImpactMarket;
-        communityFactoryInstance = await CommunityFactoryContract.deploy(
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        impactMarketInstance = (await ImpactMarketContract.deploy(
+            cUSDInstance.address,
+            [accounts.adminAccount1, accounts.adminAccount2]
+        )) as Contract & ImpactMarket;
+        communityFactoryInstance = (await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        ) as Contract & CommunityFactory;
-        await impactMarketInstance.connect(signers.adminAccount1).setCommunityFactory(
-            communityFactoryInstance.address,
-        );
-        await impactMarketInstance.connect(signers.adminAccount2).setCommunityFactory(
-            communityFactoryInstance.address,
-        );
-        let rawTx1 = await impactMarketInstance.connect(signers.adminAccount1).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
+        )) as Contract & CommunityFactory;
+        await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .setCommunityFactory(communityFactoryInstance.address);
+        await impactMarketInstance
+            .connect(signers.adminAccount2)
+            .setCommunityFactory(communityFactoryInstance.address);
+        let rawTx1 = await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                day.toString(),
+                hour.toString()
+            );
         let tx1 = await rawTx1.wait();
         tx1.events!.length.should.be.equal(0);
-        const rawTx2 = await impactMarketInstance.connect(signers.adminAccount2).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            week.toString(),
-            hour.toString(),
-        );
+        const rawTx2 = await impactMarketInstance
+            .connect(signers.adminAccount2)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                week.toString(),
+                hour.toString()
+            );
         const tx2 = await rawTx2.wait();
         tx2.events!.length.should.be.equal(0);
     });
 
     it('should be able to add community if missing 1 in 3 signatures', async () => {
-        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
-        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
-            accounts.adminAccount1,
-            accounts.adminAccount2,
-            accounts.adminAccount3,
-        ]) as Contract & ImpactMarket;
-        communityFactoryInstance = await CommunityFactoryContract.deploy(
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        impactMarketInstance = (await ImpactMarketContract.deploy(
+            cUSDInstance.address,
+            [
+                accounts.adminAccount1,
+                accounts.adminAccount2,
+                accounts.adminAccount3,
+            ]
+        )) as Contract & ImpactMarket;
+        communityFactoryInstance = (await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        ) as Contract & CommunityFactory;
-        await impactMarketInstance.connect(signers.adminAccount1).setCommunityFactory(
-            communityFactoryInstance.address,
-        );
-        await impactMarketInstance.connect(signers.adminAccount2).setCommunityFactory(
-            communityFactoryInstance.address,
-        );
-        const rawTx1 = await impactMarketInstance.connect(signers.adminAccount1).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
+        )) as Contract & CommunityFactory;
+        await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .setCommunityFactory(communityFactoryInstance.address);
+        await impactMarketInstance
+            .connect(signers.adminAccount2)
+            .setCommunityFactory(communityFactoryInstance.address);
+        const rawTx1 = await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                day.toString(),
+                hour.toString()
+            );
         const tx1 = await rawTx1.wait();
         tx1.events!.length.should.be.equal(0);
-        const rawTx2 = await impactMarketInstance.connect(signers.adminAccount2).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
+        const rawTx2 = await impactMarketInstance
+            .connect(signers.adminAccount2)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                day.toString(),
+                hour.toString()
+            );
         const tx2 = await rawTx2.wait();
         const communityAddress = filterEvent(tx2, 'CommunityAdded')!.args![0];
-        communityInstance = await CommunityContract.attach(communityAddress) as Contract & Community;
+        communityInstance = (await CommunityContract.attach(
+            communityAddress
+        )) as Contract & Community;
         (await communityInstance.claimAmount())
             .toString()
             .should.be.equal(claimAmountTwo.toString());
     });
 
     it('should be signined by the two admins', async () => {
-        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
-        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
-            accounts.adminAccount1,
-            accounts.adminAccount2,
-        ]) as Contract & ImpactMarket;
-        communityFactoryInstance = await CommunityFactoryContract.deploy(
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        impactMarketInstance = (await ImpactMarketContract.deploy(
+            cUSDInstance.address,
+            [accounts.adminAccount1, accounts.adminAccount2]
+        )) as Contract & ImpactMarket;
+        communityFactoryInstance = (await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        ) as Contract & CommunityFactory;
-        await impactMarketInstance.connect(signers.adminAccount1).setCommunityFactory(
-            communityFactoryInstance.address,
-        );
-        await impactMarketInstance.connect(signers.adminAccount2).setCommunityFactory(
-            communityFactoryInstance.address,
-        );
-        await impactMarketInstance.connect(signers.adminAccount1).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
-        const rawTx = await impactMarketInstance.connect(signers.adminAccount2).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
+        )) as Contract & CommunityFactory;
+        await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .setCommunityFactory(communityFactoryInstance.address);
+        await impactMarketInstance
+            .connect(signers.adminAccount2)
+            .setCommunityFactory(communityFactoryInstance.address);
+        await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                day.toString(),
+                hour.toString()
+            );
+        const rawTx = await impactMarketInstance
+            .connect(signers.adminAccount2)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                day.toString(),
+                hour.toString()
+            );
         const tx2 = await rawTx.wait();
         const communityAddress = filterEvent(tx2, 'CommunityAdded')!.args![0];
-        communityInstance = await CommunityContract.attach(communityAddress) as Contract & Community;
+        communityInstance = (await CommunityContract.attach(
+            communityAddress
+        )) as Contract & Community;
         (await communityInstance.claimAmount())
             .toString()
             .should.be.equal(claimAmountTwo.toString());
     });
 
     it('should not be able to sign twice by the same admin', async () => {
-        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
-        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
-            accounts.adminAccount1,
-            accounts.adminAccount2,
-        ]) as Contract & ImpactMarket;
-        communityFactoryInstance = await CommunityFactoryContract.deploy(
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        impactMarketInstance = (await ImpactMarketContract.deploy(
+            cUSDInstance.address,
+            [accounts.adminAccount1, accounts.adminAccount2]
+        )) as Contract & ImpactMarket;
+        communityFactoryInstance = (await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        ) as Contract & CommunityFactory;
+        )) as Contract & CommunityFactory;
         await impactMarketInstance.setCommunityFactory(
             communityFactoryInstance.address
         );
-        await impactMarketInstance.connect(signers.adminAccount1).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
-        await expectRevert(
-            impactMarketInstance.connect(signers.adminAccount1).addCommunity(
+        await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .addCommunity(
                 accounts.communityManagerA,
                 claimAmountTwo.toString(),
                 maxClaimTen.toString(),
                 day.toString(),
-                hour.toString(),
-            ),
+                hour.toString()
+            );
+        await expectRevert(
+            impactMarketInstance
+                .connect(signers.adminAccount1)
+                .addCommunity(
+                    accounts.communityManagerA,
+                    claimAmountTwo.toString(),
+                    maxClaimTen.toString(),
+                    day.toString(),
+                    hour.toString()
+                ),
             'SIGNED'
         );
     });

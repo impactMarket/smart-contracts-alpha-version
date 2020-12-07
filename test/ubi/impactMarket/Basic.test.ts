@@ -1,4 +1,4 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat';
 import { should } from 'chai';
 import { Contract, ContractFactory } from 'ethers';
 
@@ -8,7 +8,12 @@ import { Contract, ContractFactory } from 'ethers';
 //     CUSDInstance,
 //     CommunityFactoryInstance,
 // } from '../../../types/truffle-contracts';
-import { AccountsAddress, AccountsSigner, defineAccounts, defineSigners } from '../../helpers/accounts';
+import {
+    AccountsAddress,
+    AccountsSigner,
+    defineAccounts,
+    defineSigners,
+} from '../../helpers/accounts';
 import {
     hour,
     day,
@@ -22,11 +27,10 @@ import {
 //     cUSD,
 // } from '../../helpers/contracts';
 import { BeneficiaryState, filterEvent } from '../../helpers/utils';
-import { ImpactMarket } from "../../../types/ImpactMarket";
-import { CUSD } from "../../../types/CUSD";
-import { Community } from "../../../types/Community";
-import { CommunityFactory } from "../../../types/CommunityFactory"
-
+import { ImpactMarket } from '../../../types/ImpactMarket';
+import { CUSD } from '../../../types/CUSD';
+import { Community } from '../../../types/Community';
+import { CommunityFactory } from '../../../types/CommunityFactory';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { expectRevert } = require('@openzeppelin/test-helpers');
@@ -51,35 +55,42 @@ describe('ImpactMarket - Basic', () => {
         accounts = await defineAccounts();
         signers = await defineSigners();
         //
-        ImpactMarketContract = await ethers.getContractFactory("ImpactMarket");
-        CommunityFactoryContract = await ethers.getContractFactory("CommunityFactory");
-        CommunityContract = await ethers.getContractFactory("Community");
-        cUSDContract = await ethers.getContractFactory("cUSD");
+        ImpactMarketContract = await ethers.getContractFactory('ImpactMarket');
+        CommunityFactoryContract = await ethers.getContractFactory(
+            'CommunityFactory'
+        );
+        CommunityContract = await ethers.getContractFactory('Community');
+        cUSDContract = await ethers.getContractFactory('cUSD');
         //
-        cUSDInstance = await cUSDContract.deploy() as Contract & CUSD;
-        impactMarketInstance = await ImpactMarketContract.deploy(cUSDInstance.address, [
-            accounts.adminAccount1,
-        ]) as Contract & ImpactMarket;
-        communityFactoryInstance = await CommunityFactoryContract.deploy(
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        impactMarketInstance = (await ImpactMarketContract.deploy(
+            cUSDInstance.address,
+            [accounts.adminAccount1]
+        )) as Contract & ImpactMarket;
+        communityFactoryInstance = (await CommunityFactoryContract.deploy(
             cUSDInstance.address,
             impactMarketInstance.address
-        ) as Contract & CommunityFactory;
+        )) as Contract & CommunityFactory;
         await impactMarketInstance.setCommunityFactory(
             communityFactoryInstance.address
         );
     });
 
     it('should be able to add a community if admin', async () => {
-        const rawTx = await impactMarketInstance.connect(signers.adminAccount1).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
+        const rawTx = await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                day.toString(),
+                hour.toString()
+            );
         const tx = await rawTx.wait();
         const communityAddress = filterEvent(tx, 'CommunityAdded')!.args![0];
-        communityInstance = await CommunityContract.attach(communityAddress) as Contract & Community;
+        communityInstance = (await CommunityContract.attach(
+            communityAddress
+        )) as Contract & Community;
         (await communityInstance.claimAmount())
             .toString()
             .should.be.equal(claimAmountTwo.toString());
@@ -95,27 +106,33 @@ describe('ImpactMarket - Basic', () => {
     });
 
     it('should be able to remove a community if admin', async () => {
-        const rawTx = await impactMarketInstance.connect(signers.adminAccount1).addCommunity(
-            accounts.communityManagerA,
-            claimAmountTwo.toString(),
-            maxClaimTen.toString(),
-            day.toString(),
-            hour.toString(),
-        );
+        const rawTx = await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .addCommunity(
+                accounts.communityManagerA,
+                claimAmountTwo.toString(),
+                maxClaimTen.toString(),
+                day.toString(),
+                hour.toString()
+            );
         const tx = await rawTx.wait();
         const communityAddress = filterEvent(tx, 'CommunityAdded')!.args![0];
-        await impactMarketInstance.connect(signers.adminAccount1).removeCommunity(communityAddress);
+        await impactMarketInstance
+            .connect(signers.adminAccount1)
+            .removeCommunity(communityAddress);
     });
 
     it('should not be able to create a community with invalid values', async () => {
         await expectRevert.unspecified(
-            impactMarketInstance.connect(signers.adminAccount1).addCommunity(
-                accounts.communityManagerA,
-                claimAmountTwo.toString(),
-                maxClaimTen.toString(),
-                hour.toString(),
-                day.toString(),
-            )
+            impactMarketInstance
+                .connect(signers.adminAccount1)
+                .addCommunity(
+                    accounts.communityManagerA,
+                    claimAmountTwo.toString(),
+                    maxClaimTen.toString(),
+                    hour.toString(),
+                    day.toString()
+                )
         );
         await expectRevert.unspecified(
             impactMarketInstance.connect(signers.adminAccount1).addCommunity(
@@ -123,7 +140,7 @@ describe('ImpactMarket - Basic', () => {
                 maxClaimTen.toString(), // it's supposed to be wrong!
                 claimAmountTwo.toString(),
                 day.toString(),
-                hour.toString(),
+                hour.toString()
             )
         );
     });

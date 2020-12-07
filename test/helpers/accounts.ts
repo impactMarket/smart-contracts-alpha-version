@@ -1,6 +1,5 @@
-import { ethers } from "hardhat";
-import { Signer } from "ethers";
-
+import { ethers } from 'hardhat';
+import { Signer } from 'ethers';
 
 export interface AccountsAddress {
     adminAccount1: string;
