@@ -63,6 +63,7 @@
         "ethers": "5.0.23",
         "ganache-cli": "6.12.1",
         "hardhat": "2.0.4",
+        "hardhat-deploy": "^0.7.0-beta.37",
         "hardhat-typechain": "0.3.3",
         "prettier": "2.2.1",
         "solhint": "3.3.2",
