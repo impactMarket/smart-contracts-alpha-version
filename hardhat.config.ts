@@ -2,6 +2,7 @@ import { task, HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-waffle";
 // import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-web3";
+import "@nomiclabs/hardhat-solhint";
 import "hardhat-typechain";
 import "solidity-coverage";
 import 'hardhat-deploy';
