@@ -33,8 +33,13 @@ Deploy with `npx truffle deploy --network development`.
 
 Further information at [audits/README.md](audits/README.md).
 
+### ImpactMarket on Alfajores Testnet
+{
+  impactMarket: '0x23611bDA8C4a048c22139b4a444f3E329E2046b4',
+  communityFactory: '0x3B7e1ccEd164394Cb80DAe2A7C00b6cE77CEfF4D'
+}
+
 ### ImpactMarket on Celo Mainnet
-Deployed during open test at **0x2437F9ca0ac21bD2377734800918c2FBE0E566Ca** and *CommunityFactory* at **0xE5f322B05Ada64883d62C5f398F03961827ddC14**.
 Currently deployed at **0xe55C3eb4a04F93c3302A5d8058348157561BF5ca** and *CommunityFactory* at **0xF3ba2c917b01627fb90673Aae0E170EE767Af8b6**.
 
 ## Useful tools and links
