@@ -21,7 +21,7 @@ jobs:
       python: 3.6
       before_install:
         - pip3 install slither-analyzer
-        - nvm install lts/fermium
+        - nvm install 14.15.1
       install:
         - npm install
       script:
