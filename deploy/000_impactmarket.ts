@@ -1,15 +1,68 @@
+import 'dotenv/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { DeployFunction } from 'hardhat-deploy/types';
+import { newKit } from '@celo/contractkit';
+import IPCTJSON from '../artifacts/contracts/ubi/ImpactMarket.sol/ImpactMarket.json';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-    const { deployments, getNamedAccounts } = hre;
-    const { deploy, execute, read, log } = deployments;
+    // Connect to the desired network
+    // https://rc1-forno.celo-testnet.org
+    // https://alfajores-forno.celo-testnet.org
 
-    await deploy('ImpactMarket', {
-        from: '0xa8B9a7B29C11A6D8CBFe1e8aB5E16E81Ec50980f',
-        args: ['0x874069fa1eb16d44d622f2e0ca25eea172369bc1', ['0x833961aab38d24EECdCD2129Aa5a5d41Fd86Acbf']],
-        log: true,
-        deterministicDeployment: true,
-    });
+    if (hre.network.name === 'alfajores') {
+        console.log('deploying to alfajores');
+
+        const cUSDAddress = process.env.CUSD_ALFAJORES_ADDRESS;
+        const kit = newKit('https://alfajores-forno.celo-testnet.org');
+        kit.addAccount(process.env.TESTNET_DEPLOY_PK!);
+
+        // deploy impact market factory
+        console.log('deploy ImpactMarket...');
+
+        const impactMarketFactory = await hre.ethers.getContractFactory(
+            'ImpactMarket'
+        );
+        const txIPCT = impactMarketFactory.getDeployTransaction(cUSDAddress, [
+            process.env.BERNARDO_STAGING_WALLET_ADDRESS,
+        ]);
+        const resultIPCT = await kit.web3.eth.sendTransaction({
+            from: (await kit.web3.eth.getAccounts())[0],
+            data: txIPCT.data!.toString(),
+        });
+
+        // deploy community factory
+        console.log('deploy CommunityFactory...');
+
+        const communityFactoryFactory = await hre.ethers.getContractFactory(
+            'CommunityFactory'
+        );
+        const txFactory = communityFactoryFactory.getDeployTransaction(
+            cUSDAddress,
+            resultIPCT.contractAddress
+        );
+        const resultFactory = await kit.web3.eth.sendTransaction({
+            from: (await kit.web3.eth.getAccounts())[0],
+            data: txFactory.data!.toString(),
+        });
+
+        // set impact market community factory
+        console.log('set CommunityFactory...');
+
+        const impactMarket = new kit.web3.eth.Contract(
+            IPCTJSON.abi as any,
+            resultIPCT.contractAddress!
+        );
+
+        await impactMarket.methods
+            .initCommunityFactory(resultFactory.contractAddress!)
+            .send({ from: (await kit.web3.eth.getAccounts())[0] });
+
+        // success
+
+        console.log({
+            impactMarket: resultIPCT.contractAddress,
+            communityFactory: resultFactory.contractAddress,
+        });
+    }
 };
 export default func;
