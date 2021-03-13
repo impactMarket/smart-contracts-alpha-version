@@ -6,6 +6,7 @@ import '@nomiclabs/hardhat-solhint';
 import 'hardhat-typechain';
 import 'solidity-coverage';
 import 'hardhat-deploy';
+import 'hardhat-tracer';
 
 const config: HardhatUserConfig = {
     // Your type-safe config goes here

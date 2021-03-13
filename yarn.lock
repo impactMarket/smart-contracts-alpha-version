@@ -4993,7 +4993,7 @@ ethers@4.0.0-beta.3:
     uuid "2.0.1"
     xmlhttprequest "1.8.0"
 
-ethers@5.0.32, ethers@^5.0.0, ethers@^5.0.1, ethers@^5.0.2:
+ethers@5.0.32, ethers@^5.0.0, ethers@^5.0.1, ethers@^5.0.2, ethers@^5.0.24:
   version "5.0.32"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.0.32.tgz#f009970be31d96a589bf0ce597a39c10c7e297a6"
   integrity sha512-rORfGWR0HsA4pjKMMcWZorw12DHsXqfIAuPVHJsXt+vI24jvXcVqx+rLsSvgOoLdaCMdxiN5qlIq2+4axKG31g==
@@ -6008,6 +6008,13 @@ hardhat-deploy@^0.7.0-beta.37:
     match-all "^1.2.6"
     murmur-128 "^0.2.1"
     qs "^6.9.4"
+
+hardhat-tracer@^1.0.0-alpha.2:
+  version "1.0.0-alpha.2"
+  resolved "https://registry.yarnpkg.com/hardhat-tracer/-/hardhat-tracer-1.0.0-alpha.2.tgz#adc3b91819652adfe1228c1b7590cf2c0ae351cc"
+  integrity sha512-nUklRfdb+C7DlTLZBFT3oLOLMssCSmxew3XvSud2GT2PLLMc5qRwWB13f9v8gFhv0ITjRGYMr0GsV5s08qffCg==
+  dependencies:
+    ethers "^5.0.24"
 
 hardhat-typechain@0.3.5:
   version "0.3.5"
