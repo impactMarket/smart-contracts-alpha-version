@@ -2,7 +2,7 @@ import { should } from 'chai';
 import { Contract, ContractFactory } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { CUSD } from '../../../types/CUSD';
+import { CUsd } from '../../../types/CUsd';
 import { Community } from '../../../types/Community';
 import { CommunityFactory } from '../../../types/CommunityFactory';
 import { ImpactMarket } from '../../../types/ImpactMarket';
@@ -30,10 +30,10 @@ describe('ImpactMarket - Governance', () => {
     let accounts: AccountsAddress;
     let signers: AccountsSigner;
     // contract instances
-    let impactMarketInstance: Contract & ImpactMarket;
-    let communityInstance: Contract & Community;
-    let communityFactoryInstance: Contract & CommunityFactory;
-    let cUSDInstance: Contract & CUSD;
+    let impactMarketInstance: ImpactMarket;
+    let communityInstance: Community;
+    let communityFactoryInstance: CommunityFactory;
+    let cUSDInstance: CUsd;
     //
     let ImpactMarketContract: ContractFactory;
     let CommunityFactoryContract: ContractFactory;
@@ -53,7 +53,7 @@ describe('ImpactMarket - Governance', () => {
     });
 
     it('should not be able to add community if missing signatures', async () => {
-        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUsd;
         impactMarketInstance = (await ImpactMarketContract.deploy(
             cUSDInstance.address,
             [accounts.adminAccount1, accounts.adminAccount2]
@@ -82,7 +82,7 @@ describe('ImpactMarket - Governance', () => {
     });
 
     it('should use differente parameters for each community', async () => {
-        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUsd;
         impactMarketInstance = (await ImpactMarketContract.deploy(
             cUSDInstance.address,
             [accounts.adminAccount1, accounts.adminAccount2]
@@ -122,7 +122,7 @@ describe('ImpactMarket - Governance', () => {
     });
 
     it('should be able to add community if missing 1 in 3 signatures', async () => {
-        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUsd;
         impactMarketInstance = (await ImpactMarketContract.deploy(
             cUSDInstance.address,
             [
@@ -172,7 +172,7 @@ describe('ImpactMarket - Governance', () => {
     });
 
     it('should be signined by the two admins', async () => {
-        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUsd;
         impactMarketInstance = (await ImpactMarketContract.deploy(
             cUSDInstance.address,
             [accounts.adminAccount1, accounts.adminAccount2]
@@ -216,7 +216,7 @@ describe('ImpactMarket - Governance', () => {
     });
 
     it('should not be able to sign twice by the same admin', async () => {
-        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUsd;
         impactMarketInstance = (await ImpactMarketContract.deploy(
             cUSDInstance.address,
             [accounts.adminAccount1, accounts.adminAccount2]

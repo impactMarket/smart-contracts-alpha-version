@@ -3,7 +3,7 @@ import { should } from 'chai';
 import { Contract } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { CUSD } from '../../../types/CUSD';
+import { CUsd } from '../../../types/CUsd';
 import { Community } from '../../../types/Community';
 import { CommunityFactory } from '../../../types/CommunityFactory';
 import { ImpactMarket } from '../../../types/ImpactMarket';
@@ -24,10 +24,7 @@ import {
 import { expectEvent } from '../../helpers/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const {
-    expectRevert,
-    time,
-} = require('@openzeppelin/test-helpers');
+const { expectRevert, time } = require('@openzeppelin/test-helpers');
 should();
 
 /** @test {Community} contract */
@@ -35,10 +32,10 @@ describe('Community - Claim', () => {
     let accounts: AccountsAddress;
     let signers: AccountsSigner;
     // contract instances
-    let impactMarketInstance: Contract & ImpactMarket;
-    let communityInstance: Contract & Community;
-    let communityFactoryInstance: Contract & CommunityFactory;
-    let cUSDInstance: Contract & CUSD;
+    let impactMarketInstance: ImpactMarket;
+    let communityInstance: Community;
+    let communityFactoryInstance: CommunityFactory;
+    let cUSDInstance: CUsd;
 
     beforeEach(async () => {
         accounts = await defineAccounts();
@@ -53,7 +50,7 @@ describe('Community - Claim', () => {
         const CommunityContract = await ethers.getContractFactory('Community');
         const cUSDContract = await ethers.getContractFactory('cUSD');
         //
-        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUsd;
         impactMarketInstance = (await ImpactMarketContract.deploy(
             cUSDInstance.address,
             [accounts.adminAccount1]
@@ -114,9 +111,12 @@ describe('Community - Claim', () => {
         const receipt = await communityInstance
             .connect(signers.communityManagerA)
             .lock();
-        expectEvent(await receipt.wait(), 'CommunityLocked'/*, {
+        expectEvent(
+            await receipt.wait(),
+            'CommunityLocked' /*, {
             _by: accounts.communityManagerA,
-        }*/);
+        }*/
+        );
         await expectRevert(
             communityInstance.connect(signers.beneficiaryA).claim(),
             'LOCKED'
@@ -185,8 +185,8 @@ describe('Community - Claim', () => {
         await time.increase(
             time.duration.seconds(
                 baseInterval +
-                incrementInterval * (maxClaimAmount / claimAmount) +
-                5
+                    incrementInterval * (maxClaimAmount / claimAmount) +
+                    5
             )
         );
         await expectRevert(

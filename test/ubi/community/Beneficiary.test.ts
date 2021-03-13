@@ -2,7 +2,7 @@ import { should } from 'chai';
 import { Contract, ContractFactory } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { CUSD } from '../../../types/CUSD';
+import { CUsd } from '../../../types/CUsd';
 import { Community } from '../../../types/Community';
 import { CommunityFactory } from '../../../types/CommunityFactory';
 import { ImpactMarket } from '../../../types/ImpactMarket';
@@ -30,10 +30,10 @@ describe('Community - Beneficiary', () => {
     let accounts: AccountsAddress;
     let signers: AccountsSigner;
     // contract instances
-    let impactMarketInstance: Contract & ImpactMarket;
-    let communityInstance: Contract & Community;
-    let communityFactoryInstance: Contract & CommunityFactory;
-    let cUSDInstance: Contract & CUSD;
+    let impactMarketInstance: ImpactMarket;
+    let communityInstance: Community;
+    let communityFactoryInstance: CommunityFactory;
+    let cUSDInstance: CUsd;
     //
     let ImpactMarketContract: ContractFactory;
     let CommunityFactoryContract: ContractFactory;
@@ -51,7 +51,7 @@ describe('Community - Beneficiary', () => {
         CommunityContract = await ethers.getContractFactory('Community');
         cUSDContract = await ethers.getContractFactory('cUSD');
         //
-        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUsd;
         impactMarketInstance = (await ImpactMarketContract.deploy(
             cUSDInstance.address,
             [accounts.adminAccount1]
@@ -77,7 +77,7 @@ describe('Community - Beneficiary', () => {
         )) as Contract & Community;
         communityInstance = communityInstance.connect(
             signers.communityManagerA
-        ) as Contract & Community;
+        ) as Community;
         await cUSDInstance.testFakeFundAddress(communityAddress);
     });
 

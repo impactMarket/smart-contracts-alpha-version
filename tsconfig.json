@@ -1,39 +1,15 @@
 {
     "compilerOptions": {
-        "target": "es2017",
+        "target": "ES2017",
         "module": "commonjs",
-        "strict": true,
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true,
-        "noImplicitThis": true,
-        "alwaysStrict": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "forceConsistentCasingInFileNames": true,
-        "resolveJsonModule": true,
-        "lib": [
-            "es2015",
-            "esnext.asynciterable"
-        ],
+        "declaration": true,
+        "declarationMap": true,
         "sourceMap": true,
-        "typeRoots": [
-            "./node_modules/@types",
-            "./types"
-        ],
-        "types": [
-            "node",
-            "truffle-contracts",
-            "mocha"
-        ]
+        "outDir": "./dist",
+        "strict": true,
+        "rootDirs": ["./src", "./test"],
+        "esModuleInterop": true
     },
-    "include": [
-        "**/*.ts",
-        "**/*.json"
-    ],
-    "exclude": [
-        "node_modules",
-        "example",
-        "build"
-    ]
+    "exclude": ["dist", "node_modules"],
+    "include": ["./test", "./src"]
 }

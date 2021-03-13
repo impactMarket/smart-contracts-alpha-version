@@ -3,7 +3,7 @@ import { should } from 'chai';
 import { Contract, ContractFactory, Signer } from 'ethers';
 import { ethers } from 'hardhat';
 
-import { CUSD } from '../../types/CUSD';
+import { CUsd } from '../../types/CUsd';
 import { Community } from '../../types/Community';
 import { CommunityFactory } from '../../types/CommunityFactory';
 import { ImpactMarket } from '../../types/ImpactMarket';
@@ -32,9 +32,9 @@ describe('Chaos test (complete flow)', () => {
     let accounts: AccountsAddress;
     let signers: AccountsSigner;
     // contract instances
-    let impactMarketInstance: Contract & ImpactMarket;
-    let communityFactoryInstance: Contract & CommunityFactory;
-    let cUSDInstance: Contract & CUSD;
+    let impactMarketInstance: ImpactMarket;
+    let communityFactoryInstance: CommunityFactory;
+    let cUSDInstance: CUsd;
     //
     let ImpactMarketContract: ContractFactory;
     let CommunityFactoryContract: ContractFactory;
@@ -44,7 +44,7 @@ describe('Chaos test (complete flow)', () => {
     // add community
     const addCommunity = async (
         communityManager: string
-    ): Promise<Contract & Community> => {
+    ): Promise<Community> => {
         const rawTx = await impactMarketInstance
             .connect(signers.adminAccount1)
             .addCommunity(
@@ -67,7 +67,7 @@ describe('Chaos test (complete flow)', () => {
     };
     // add beneficiary
     const addBeneficiary = async (
-        instance: Contract & Community,
+        instance: Community,
         beneficiaryAddress: string,
         communityManagerSigner: Signer
     ): Promise<void> => {
@@ -85,7 +85,7 @@ describe('Chaos test (complete flow)', () => {
     };
     // wait claim time
     const waitClaimTime = async (
-        instance: Contract & Community,
+        instance: Community,
         beneficiaryAddress: string
     ): Promise<void> => {
         const waitIs = (
@@ -95,7 +95,7 @@ describe('Chaos test (complete flow)', () => {
     };
     // claim
     const beneficiaryClaim = async (
-        instance: Contract & Community,
+        instance: Community,
         beneficiaryAddress: string,
         beneficiarySigner: Signer
     ): Promise<void> => {
@@ -134,7 +134,7 @@ describe('Chaos test (complete flow)', () => {
         CommunityContract = await ethers.getContractFactory('Community');
         cUSDContract = await ethers.getContractFactory('cUSD');
         //
-        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUSD;
+        cUSDInstance = (await cUSDContract.deploy()) as Contract & CUsd;
         impactMarketInstance = (await ImpactMarketContract.deploy(
             cUSDInstance.address,
             [accounts.adminAccount1]
