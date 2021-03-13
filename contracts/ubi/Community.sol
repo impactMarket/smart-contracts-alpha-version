@@ -27,6 +27,9 @@ contract Community is AccessControl {
     uint256 public incrementInterval;
     uint256 public maxClaim;
 
+    uint256 public nBeneficiaries;
+    uint256 public nManagers;
+
     address public previousCommunityContract;
     address public impactMarketAddress;
     address public cUSDAddress;
@@ -62,6 +65,7 @@ contract Community is AccessControl {
      */
     constructor(
         address _firstManager,
+        address _secondManager,
         uint256 _claimAmount,
         uint256 _maxClaim,
         uint256 _baseInterval,
@@ -70,17 +74,24 @@ contract Community is AccessControl {
         address _cUSDAddress,
         address _impactMarketAddress
     ) public {
-        require(_baseInterval > _incrementInterval, "");
-        require(_maxClaim > _claimAmount, "");
-
-        _setupRole(MANAGER_ROLE, _firstManager);
-        _setRoleAdmin(MANAGER_ROLE, MANAGER_ROLE);
-        emit ManagerAdded(_firstManager);
+        require(_baseInterval > _incrementInterval, "NOT_ALLOWED");
+        require(_maxClaim > _claimAmount, "NOT_ALLOWED");
+        require(_firstManager != _secondManager, "NOT_ALLOWED");
+        // TODO: first managers must have phone numbers verified
 
         claimAmount = _claimAmount;
         baseInterval = _baseInterval;
         incrementInterval = _incrementInterval;
         maxClaim = _maxClaim;
+
+        nBeneficiaries = 0;
+        nManagers = 2;
+
+        _setupRole(MANAGER_ROLE, _firstManager);
+        _setRoleAdmin(MANAGER_ROLE, MANAGER_ROLE);
+        emit ManagerAdded(_firstManager);
+        _setupRole(MANAGER_ROLE, _secondManager);
+        emit ManagerAdded(_secondManager);
 
         previousCommunityContract = _previousCommunityContract;
         cUSDAddress = _cUSDAddress;
@@ -115,6 +126,8 @@ contract Community is AccessControl {
      * @dev Allow community managers to add other managers.
      */
     function addManager(address _account) external onlyManagers {
+        // TODO: require phone number verified
+        nManagers ++;
         grantRole(MANAGER_ROLE, _account);
         emit ManagerAdded(_account);
     }
@@ -123,6 +136,8 @@ contract Community is AccessControl {
      * @dev Allow community managers to remove other managers.
      */
     function removeManager(address _account) external onlyManagers {
+        require(nManagers > 2, "NOT_ENOUGH");
+        nManagers --;
         revokeRole(MANAGER_ROLE, _account);
         emit ManagerRemoved(_account);
     }
@@ -131,11 +146,12 @@ contract Community is AccessControl {
      * @dev Allow community managers to add beneficiaries.
      */
     function addBeneficiary(address _account) external onlyManagers {
-        require(beneficiaries[_account] != BeneficiaryState.Valid, "NOT_ALLOWED");
+        require(beneficiaries[_account] == BeneficiaryState.NONE, "NOT_ALLOWED");
         beneficiaries[_account] = BeneficiaryState.Valid;
         // solhint-disable-next-line not-rely-on-time
         cooldown[_account] = block.timestamp;
         lastInterval[_account] = uint256(baseInterval - incrementInterval);
+        nBeneficiaries ++;
         // send 5 cents when adding a new beneficiary
         bool success = IERC20(cUSDAddress).transfer(_account, 50000000000000000);
         require(success, "NOT_ALLOWED");
@@ -164,6 +180,9 @@ contract Community is AccessControl {
      * @dev Allow community managers to remove beneficiaries.
      */
     function removeBeneficiary(address _account) external onlyManagers {
+        require(beneficiaries[_account] == BeneficiaryState.Valid
+            && beneficiaries[_account] == BeneficiaryState.Locked, "NOT_YET");
+        nBeneficiaries --;
         beneficiaries[_account] = BeneficiaryState.Removed;
         emit BeneficiaryRemoved(_account);
     }
@@ -173,6 +192,7 @@ contract Community is AccessControl {
      */
     function claim() external onlyValidBeneficiary {
         require(!locked, "LOCKED");
+        require(beneficiaries[msg.sender] != BeneficiaryState.Locked, "LOCKED");
         // solhint-disable-next-line not-rely-on-time
         require(cooldown[msg.sender] <= block.timestamp, "NOT_YET");
         require((claimed[msg.sender] + claimAmount) <= maxClaim, "MAX_CLAIM");
@@ -182,9 +202,9 @@ contract Community is AccessControl {
             // solhint-disable-next-line not-rely-on-time
             block.timestamp + lastInterval[msg.sender]
         );
-        emit BeneficiaryClaim(msg.sender, claimAmount);
         bool success = IERC20(cUSDAddress).transfer(msg.sender, claimAmount);
         require(success, "NOT_ALLOWED");
+        emit BeneficiaryClaim(msg.sender, claimAmount);
     }
 
     /**
@@ -196,8 +216,8 @@ contract Community is AccessControl {
         uint256 _baseInterval,
         uint256 _incrementInterval
     ) external onlyManagers {
-        require(_baseInterval > _incrementInterval, "");
-        require(_maxClaim > _claimAmount, "");
+        require(_baseInterval > _incrementInterval, "NOT_ALLOWED");
+        require(_maxClaim > _claimAmount, "NOT_ALLOWED");
 
         claimAmount = _claimAmount;
         baseInterval = _baseInterval;
@@ -250,11 +270,18 @@ contract Community is AccessControl {
         emit MigratedFunds(_newCommunity, balance);
     }
 
-    function joinFromMigratedCommunity() external {
+    function beneficiaryJoinFromMigrated() external {
         cooldown[msg.sender] = ICommunity(previousCommunityContract).cooldown(msg.sender);
         lastInterval[msg.sender] = ICommunity(previousCommunityContract).lastInterval(msg.sender);
         claimed[msg.sender] = ICommunity(previousCommunityContract).claimed(msg.sender);
         // no need to check if it's a beneficiary, as the state is copied
         beneficiaries[msg.sender] = BeneficiaryState(ICommunity(previousCommunityContract).beneficiaries(msg.sender));
+        nBeneficiaries ++;
+    }
+
+    function managerJoinFromMigrated() external {
+        require(ICommunity(previousCommunityContract).hasRole(MANAGER_ROLE, msg.sender), "NOT_ALLOWED");
+        grantRole(MANAGER_ROLE, msg.sender);
+        nManagers ++;
     }
 }
