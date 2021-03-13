@@ -69,6 +69,7 @@ contract ImpactMarket is AccessControl {
         for (uint8 u = 0; u < validations.length; u += 1) {
             require(validations[u] != msg.sender, "SIGNED");
         }
+        // slither-disable-next-line controlled-array-length
         pendingValidations[requestIdentifier].push(msg.sender);
         uint256 totalValidations = pendingValidations[requestIdentifier].length;
         if (totalValidations == signaturesThreshold) {

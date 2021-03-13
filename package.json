@@ -13,7 +13,7 @@
         "coverage:ci": "hardhat coverage",
         "postcoverage:ci": "cat coverage/lcov.info | coveralls",
         "generate-ts": "hardhat compile && hardhat typechain",
-        "security": "slither . --filter-paths \"@openzeppelin|test\" --truffle-version truffle@5.1.29 --exclude-informational --exclude-low",
+        "security": "slither . --filter-paths \"@openzeppelin|test\" --exclude-informational --exclude-low",
         "localnet": "ganache-cli --gasLimit 0xfffffffffff --port 8545",
         "prettier": "prettier --write \"./test/**/**/*.ts\"",
         "lint": "npx hardhat check && eslint --fix \"./test/**/**/*.ts\""
