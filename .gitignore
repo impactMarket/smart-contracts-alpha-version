@@ -122,3 +122,5 @@ scripts/node/
 
 artifacts/
 cache/
+
+echidna-test
