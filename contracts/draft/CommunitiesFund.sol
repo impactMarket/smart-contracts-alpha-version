@@ -13,7 +13,8 @@ contract CommunitiesFund {
     address public cUSDAddress;
     address public impactMarketAddress;
 
-    mapping(uint256 => mapping(address => uint256)) public communitiesCount;
+    mapping(uint256 => uint256) public roundAmount;
+    mapping(uint256 => uint256) public roundMatchPool;
     mapping(uint256 => mapping(address => uint256)) public communitiesAmount;
 
     constructor(
@@ -32,6 +33,13 @@ contract CommunitiesFund {
     }
 
     function close() external {
+        // solhint-disable-next-line not-rely-on-time
+        require(block.timestamp >= until, "NOT_YET");
+        roundMatchPool[round] = IERC20(cUSDAddress).balanceOf(address(this));
+        open = false;
+    }
+
+    function immidiateClose() external {
         open = false;
     }
 
@@ -47,8 +55,8 @@ contract CommunitiesFund {
         require(_community.length == _amount.length, "NOT_EQUAL");
         IERC20 cusd = IERC20(cUSDAddress);
         for(uint256 c = 0; c < _community.length; c++) {
-            communitiesCount[round][_community[c]] ++;
             communitiesAmount[round][_community[c]] += _amount[c];
+            roundAmount[round] += _amount[c];
             bool success = cusd.transfer(_community[c], _amount[c]);
             require(success, "NO_FUNDS");
         }
