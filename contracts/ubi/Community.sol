@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ICommunity.sol";
 import "../interfaces/ILendingPool.sol";
+import "../common/ICurrencies.sol";
 
 /**
  * @notice Welcome to the Community contract. For each community
@@ -36,6 +37,7 @@ contract Community is AccessControl {
     address public cUSDAddress;
     address public mcUSDAddress;
     address public lendingPoolAddress = 0xAB9eA245B2b5F8069f6e5db8756A41D57C6D1570;
+    address public currenciesAddress = 0xBB9eA245B2b5F8069f6e5db8756A41D57C6D1570;
     bool public locked;
 
     event ManagerAdded(address indexed _account);
@@ -158,14 +160,7 @@ contract Community is AccessControl {
         lastInterval[_account] = uint256(baseInterval - incrementInterval);
         nBeneficiaries ++;
         // send 5 cents when adding a new beneficiary
-        try ILendingPool(lendingPoolAddress).redeemUnderlying(mcUSDAddress, payable(address(this)), 50000000000000000, 0)
-        {
-            bool success = IERC20(cUSDAddress).transfer(_account, 50000000000000000);
-            require(success, "NOT_ENOUGH");
-            emit BeneficiaryAdded(_account);
-        } catch {
-            //
-        }
+        _redeemAndTransfer(_account, 50000000000000000);
     }
 
     /**
@@ -212,14 +207,7 @@ contract Community is AccessControl {
             // solhint-disable-next-line not-rely-on-time
             block.timestamp + lastInterval[msg.sender]
         );
-        try ILendingPool(lendingPoolAddress).redeemUnderlying(mcUSDAddress, payable(address(this)), claimAmount, 0)
-        {
-            bool success = IERC20(cUSDAddress).transfer(msg.sender, claimAmount);
-            require(success, "NOT_ENOUGH");
-        emit BeneficiaryClaim(msg.sender, claimAmount);
-        } catch {
-            //
-        }
+        _redeemAndTransfer(msg.sender, claimAmount);
     }
 
     /**
@@ -309,5 +297,19 @@ contract Community is AccessControl {
         require(ICommunity(previousCommunityContract).hasRole(MANAGER_ROLE, msg.sender), "NOT_ALLOWED");
         grantRole(MANAGER_ROLE, msg.sender);
         nManagers ++;
+    }
+
+    function _redeemAndTransfer(address _account, uint256 _amount) private returns(bool) {
+        uint256 currencies = ICurrencies(currenciesAddress).length();
+        for (uint256 c = 0; c < currencies; c += 1) {
+            address currency = ICurrencies(currenciesAddress).at(c);
+            try ILendingPool(lendingPoolAddress).redeemUnderlying(ICurrencies(currenciesAddress).onPool(currency), payable(address(this)), _amount, 0)
+            {
+                bool success = IERC20(currency).transfer(_account, _amount);
+                require(success, "NOT_ENOUGH");
+                return true;
+            } catch { }
+        }
+        return false;
     }
 }
