@@ -4,6 +4,7 @@ pragma solidity ^0.6.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ICommunity.sol";
+import "../interfaces/ILendingPool.sol";
 
 /**
  * @notice Welcome to the Community contract. For each community
@@ -33,6 +34,8 @@ contract Community is AccessControl {
     address public previousCommunityContract;
     address public impactMarketAddress;
     address public cUSDAddress;
+    address public mcUSDAddress;
+    address public lendingPoolAddress = 0xAB9eA245B2b5F8069f6e5db8756A41D57C6D1570;
     bool public locked;
 
     event ManagerAdded(address indexed _account);
@@ -62,6 +65,7 @@ contract Community is AccessControl {
      * @param _incrementInterval Increment interval used in each claim.
      * @param _previousCommunityContract previous smart contract address of community.
      * @param _cUSDAddress cUSD smart contract address.
+     * @param _mcUSDAddress cUSD smart contract address.
      */
     constructor(
         address _firstManager,
@@ -72,6 +76,7 @@ contract Community is AccessControl {
         uint256 _incrementInterval,
         address _previousCommunityContract,
         address _cUSDAddress,
+        address _mcUSDAddress,
         address _impactMarketAddress
     ) public {
         require(_baseInterval > _incrementInterval, "NOT_ALLOWED");
@@ -95,6 +100,7 @@ contract Community is AccessControl {
 
         previousCommunityContract = _previousCommunityContract;
         cUSDAddress = _cUSDAddress;
+        mcUSDAddress = _mcUSDAddress;
         impactMarketAddress = _impactMarketAddress;
         locked = false;
     }
@@ -126,7 +132,6 @@ contract Community is AccessControl {
      * @dev Allow community managers to add other managers.
      */
     function addManager(address _account) external onlyManagers {
-        // TODO: require phone number verified
         nManagers ++;
         grantRole(MANAGER_ROLE, _account);
         emit ManagerAdded(_account);
@@ -153,9 +158,14 @@ contract Community is AccessControl {
         lastInterval[_account] = uint256(baseInterval - incrementInterval);
         nBeneficiaries ++;
         // send 5 cents when adding a new beneficiary
-        bool success = IERC20(cUSDAddress).transfer(_account, 50000000000000000);
-        require(success, "NOT_ALLOWED");
-        emit BeneficiaryAdded(_account);
+        try ILendingPool(lendingPoolAddress).redeemUnderlying(mcUSDAddress, payable(address(this)), 50000000000000000, 0)
+        {
+            bool success = IERC20(cUSDAddress).transfer(_account, 50000000000000000);
+            require(success, "NOT_ENOUGH");
+            emit BeneficiaryAdded(_account);
+        } catch {
+            //
+        }
     }
 
     /**
@@ -202,9 +212,14 @@ contract Community is AccessControl {
             // solhint-disable-next-line not-rely-on-time
             block.timestamp + lastInterval[msg.sender]
         );
-        bool success = IERC20(cUSDAddress).transfer(msg.sender, claimAmount);
-        require(success, "NOT_ALLOWED");
+        try ILendingPool(lendingPoolAddress).redeemUnderlying(mcUSDAddress, payable(address(this)), claimAmount, 0)
+        {
+            bool success = IERC20(cUSDAddress).transfer(msg.sender, claimAmount);
+            require(success, "NOT_ENOUGH");
         emit BeneficiaryClaim(msg.sender, claimAmount);
+        } catch {
+            //
+        }
     }
 
     /**
@@ -249,6 +264,14 @@ contract Community is AccessControl {
     }
 
     /**
+     * @dev Method called by a bot that deposits cUSD to earn interest.
+     */
+    function depoistAndEarn() external {
+        uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
+        ILendingPool(lendingPoolAddress).deposit(mcUSDAddress, balance, 0);
+    }
+
+    /**
      * @dev Migrate funds in current community to new one.
      */
     function migrateFunds(address _newCommunity, address _newCommunityManager)
@@ -266,7 +289,10 @@ contract Community is AccessControl {
         );
         uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
         bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);
+        uint256 mbalance = IERC20(mcUSDAddress).balanceOf(address(this));
+        bool msuccess = IERC20(mcUSDAddress).transfer(_newCommunity, mbalance);
         require(success, "NOT_ALLOWED");
+        require(msuccess, "NOT_ALLOWED");
         emit MigratedFunds(_newCommunity, balance);
     }
 
