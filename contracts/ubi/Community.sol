@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./interfaces/ICommunity.sol";
 import "../interfaces/ILendingPool.sol";
+import "../interfaces/ILendingPoolCore.sol";
+import "../interfaces/IAddressesProvider.sol";
+import "../interfaces/ILendingPoolAddressesProvider.sol";
 import "../common/ICurrencies.sol";
 
 /**
@@ -35,9 +38,7 @@ contract Community is AccessControl {
     address public previousCommunityContract;
     address public impactMarketAddress;
     address public cUSDAddress;
-    address public mcUSDAddress;
-    address public lendingPoolAddress = 0xAB9eA245B2b5F8069f6e5db8756A41D57C6D1570;
-    address public currenciesAddress = 0xAB9eA245B2b5F8069f6e5db8756A41D57C6D1570;
+    address public addressesProvider;
     bool public locked;
 
     event ManagerAdded(address indexed _account);
@@ -67,7 +68,7 @@ contract Community is AccessControl {
      * @param _incrementInterval Increment interval used in each claim.
      * @param _previousCommunityContract previous smart contract address of community.
      * @param _cUSDAddress cUSD smart contract address.
-     * @param _mcUSDAddress cUSD smart contract address.
+     * @param _addressesProvider cUSD smart contract address.
      */
     constructor(
         address _firstManager,
@@ -77,9 +78,9 @@ contract Community is AccessControl {
         uint256 _incrementInterval,
         address _previousCommunityContract,
         address _cUSDAddress,
-        address _mcUSDAddress,
+        address _addressesProvider,
         address _impactMarketAddress
-    ) public {
+    ) {
         require(_baseInterval > _incrementInterval, "NOT_ALLOWED");
         require(_maxClaim > _claimAmount, "NOT_ALLOWED");
 
@@ -97,7 +98,7 @@ contract Community is AccessControl {
 
         previousCommunityContract = _previousCommunityContract;
         cUSDAddress = _cUSDAddress;
-        mcUSDAddress = _mcUSDAddress;
+        addressesProvider = _addressesProvider;
         impactMarketAddress = _impactMarketAddress;
         locked = false;
     }
@@ -252,8 +253,8 @@ contract Community is AccessControl {
      * @dev Method called by a bot that deposits cUSD to earn interest.
      */
     function depoistAndEarn() external {
-        uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
-        ILendingPool(lendingPoolAddress).deposit(mcUSDAddress, balance, 0);
+        // uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
+        // ILendingPool(lendingPoolAddress).deposit(mcUSDAddress, balance, 0);
     }
 
     /**
@@ -274,10 +275,10 @@ contract Community is AccessControl {
         );
         uint256 balance = IERC20(cUSDAddress).balanceOf(address(this));
         bool success = IERC20(cUSDAddress).transfer(_newCommunity, balance);
-        uint256 mbalance = IERC20(mcUSDAddress).balanceOf(address(this));
-        bool msuccess = IERC20(mcUSDAddress).transfer(_newCommunity, mbalance);
+        // uint256 mbalance = IERC20(mcUSDAddress).balanceOf(address(this));
+        // bool msuccess = IERC20(mcUSDAddress).transfer(_newCommunity, mbalance);
         require(success, "NOT_ALLOWED");
-        require(msuccess, "NOT_ALLOWED");
+        // require(msuccess, "NOT_ALLOWED");
         emit MigratedFunds(_newCommunity, balance);
     }
 
@@ -297,15 +298,27 @@ contract Community is AccessControl {
     }
 
     function _redeemAndTransfer(address _account, uint256 _amount) private returns(bool) {
-        uint256 currencies = ICurrencies(currenciesAddress).length();
-        for (uint256 c = 0; c < currencies; c += 1) {
+        // get pool address provider from addresses provider
+        address lendingPoolAddressProvider = IAddressesProvider(addressesProvider).getAddress("POOL_ADDRESSES_PROVIDER");
+        address currenciesAddress = IAddressesProvider(addressesProvider).getAddress("CURRENCIES");
+        // get lending pool core address
+        address lendingPoolCoreAddress = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPoolCore();
+        // get lending pool address
+        address lendingPoolAddress = ILendingPoolAddressesProvider(lendingPoolAddressProvider).getLendingPool();
+        for (uint256 c = 0; c < ICurrencies(currenciesAddress).length(); c += 1) {
             address currency = ICurrencies(currenciesAddress).at(c);
-            try ILendingPool(lendingPoolAddress).redeemUnderlying(ICurrencies(currenciesAddress).onPool(currency), payable(address(this)), _amount, 0)
+            // get aToken from reserve
+            address aToken = ILendingPoolCore(lendingPoolCoreAddress).getReserveATokenAddress(currency);
+            // redeem underlying to community contract
+            try ILendingPool(lendingPoolAddress).redeemUnderlying(aToken, payable(address(this)), _amount, 0)
             {
+                // send _amount to _account
                 bool success = IERC20(currency).transfer(_account, _amount);
                 require(success, "NOT_ENOUGH");
                 return true;
-            } catch { }
+            } catch {
+                //
+            }
         }
         return false;
     }
