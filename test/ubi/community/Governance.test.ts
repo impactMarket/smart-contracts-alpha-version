@@ -129,7 +129,7 @@ describe('Community - Governance', () => {
                 newCommunityFactoryInstance.address
             );
         const newTx = await newTxRaw.wait();
-        const newCommunityAddress = (newTx.events![5].args as any)
+        const newCommunityAddress = (newTx.events![6].args as any)
             ._communityAddress;
         communityInstance = (await CommunityContract.attach(
             newCommunityAddress
