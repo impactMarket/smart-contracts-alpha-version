@@ -11,7 +11,7 @@ contract CommunityFactory {
     address public cUSDAddress;
     address public impactMarketAddress;
 
-    constructor(address _cUSDAddress, address _impactMarketAddress) public {
+    constructor(address _cUSDAddress, address _impactMarketAddress) {
         cUSDAddress = _cUSDAddress;
         impactMarketAddress = _impactMarketAddress;
     }

@@ -41,7 +41,7 @@ contract ImpactMarket is AccessControl {
      * @dev It sets the first admin, which later can add others
      * and add/remove communities.
      */
-    constructor(address _cUSDAddress, address[] memory _signatures) public {
+    constructor(address _cUSDAddress, address[] memory _signatures) {
         require(_signatures.length > 0, "NOT_VALID");
         _setupRole(ADMIN_ROLE, address(_signatures[0]));
         _setRoleAdmin(ADMIN_ROLE, ADMIN_ROLE);
