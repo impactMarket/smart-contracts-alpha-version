@@ -37,7 +37,7 @@ contract Community is AccessControl {
     address public cUSDAddress;
     address public mcUSDAddress;
     address public lendingPoolAddress = 0xAB9eA245B2b5F8069f6e5db8756A41D57C6D1570;
-    address public currenciesAddress = 0xBB9eA245B2b5F8069f6e5db8756A41D57C6D1570;
+    address public currenciesAddress = 0xAB9eA245B2b5F8069f6e5db8756A41D57C6D1570;
     bool public locked;
 
     event ManagerAdded(address indexed _account);
@@ -71,7 +71,6 @@ contract Community is AccessControl {
      */
     constructor(
         address _firstManager,
-        address _secondManager,
         uint256 _claimAmount,
         uint256 _maxClaim,
         uint256 _baseInterval,
@@ -83,8 +82,6 @@ contract Community is AccessControl {
     ) public {
         require(_baseInterval > _incrementInterval, "NOT_ALLOWED");
         require(_maxClaim > _claimAmount, "NOT_ALLOWED");
-        require(_firstManager != _secondManager, "NOT_ALLOWED");
-        // TODO: first managers must have phone numbers verified
 
         claimAmount = _claimAmount;
         baseInterval = _baseInterval;
@@ -97,8 +94,6 @@ contract Community is AccessControl {
         _setupRole(MANAGER_ROLE, _firstManager);
         _setRoleAdmin(MANAGER_ROLE, MANAGER_ROLE);
         emit ManagerAdded(_firstManager);
-        _setupRole(MANAGER_ROLE, _secondManager);
-        emit ManagerAdded(_secondManager);
 
         previousCommunityContract = _previousCommunityContract;
         cUSDAddress = _cUSDAddress;

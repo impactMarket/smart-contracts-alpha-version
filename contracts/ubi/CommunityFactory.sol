@@ -28,7 +28,6 @@ contract CommunityFactory {
      */
     function deployCommunity(
         address _firstManager,
-        address _secondManager,
         uint256 _claimAmount,
         uint256 _maxClaim,
         uint256 _baseInterval,
@@ -39,12 +38,12 @@ contract CommunityFactory {
             address(
                 new Community(
                     _firstManager,
-                    _secondManager,
                     _claimAmount,
                     _maxClaim,
                     _baseInterval,
                     _incrementInterval,
                     _previousCommunityAddress,
+                    cUSDAddress,
                     cUSDAddress,
                     msg.sender
                 )
