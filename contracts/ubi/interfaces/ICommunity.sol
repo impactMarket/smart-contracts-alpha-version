@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.6.0;
+pragma solidity ^0.8.0;
 
 interface ICommunity {
     function cooldown(address beneficiary) external view returns(uint256);

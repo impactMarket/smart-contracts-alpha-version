@@ -10,7 +10,7 @@ import 'hardhat-tracer';
 
 const config: HardhatUserConfig = {
     // Your type-safe config goes here
-    solidity: '0.6.5',
+    solidity: '0.8.4',
     typechain: {
         outDir: 'types/',
         target: 'ethers-v5',
