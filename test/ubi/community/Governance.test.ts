@@ -117,10 +117,11 @@ describe('Community - Governance', () => {
         const previousCommunityPreviousBalance = await cUSDInstance.balanceOf(
             communityInstance.address
         );
-        const newCommunityFactoryInstance = await CommunityFactoryContract.deploy(
-            cUSDInstance.address,
-            impactMarketInstance.address
-        );
+        const newCommunityFactoryInstance =
+            await CommunityFactoryContract.deploy(
+                cUSDInstance.address,
+                impactMarketInstance.address
+            );
         const newTxRaw = await impactMarketInstance
             .connect(signers.adminAccount1)
             .migrateCommunity(
@@ -129,7 +130,7 @@ describe('Community - Governance', () => {
                 newCommunityFactoryInstance.address
             );
         const newTx = await newTxRaw.wait();
-        const newCommunityAddress = (newTx.events![6].args as any)
+        const newCommunityAddress = (newTx.events![5].args as any)
             ._communityAddress;
         communityInstance = (await CommunityContract.attach(
             newCommunityAddress
@@ -159,10 +160,11 @@ describe('Community - Governance', () => {
     });
 
     it('should not be able to migrate from invalid community', async () => {
-        const newCommunityFactoryInstance = await CommunityFactoryContract.deploy(
-            cUSDInstance.address,
-            impactMarketInstance.address
-        );
+        const newCommunityFactoryInstance =
+            await CommunityFactoryContract.deploy(
+                cUSDInstance.address,
+                impactMarketInstance.address
+            );
         await expectRevert(
             impactMarketInstance
                 .connect(signers.adminAccount1)
@@ -176,10 +178,11 @@ describe('Community - Governance', () => {
     });
 
     it('should not be able to migrate community if not admin', async () => {
-        const newCommunityFactoryInstance = await CommunityFactoryContract.deploy(
-            cUSDInstance.address,
-            impactMarketInstance.address
-        );
+        const newCommunityFactoryInstance =
+            await CommunityFactoryContract.deploy(
+                cUSDInstance.address,
+                impactMarketInstance.address
+            );
         await expectRevert(
             impactMarketInstance
                 .connect(signers.adminAccount2)
