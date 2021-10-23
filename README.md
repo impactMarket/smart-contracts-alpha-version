@@ -34,7 +34,7 @@ Deploy with `npx truffle deploy --network development`.
 Further information at [audits/README.md](audits/README.md).
 
 ### ImpactMarket on Alfajores Testnet
-Currently deployed at **0xc70cC218AE84cfDb0De11783082c49E3702092fb** and *CommunityFactory* at **0x87E1C49797EC7b0C785AE8EE8148254911884959**.
+Currently deployed at **0xc70cC218AE84cfDb0De11783082c49E3702092fb** and *CommunityFactory* at **0x60dc99F9A269716fc5f2a44E84699db99272edA3**.
 
 ## Useful tools and links
 * [Celo Network Protocol Parameters](https://github.com/celo-org/celo-blockchain/blob/master/params/protocol_params.go)
